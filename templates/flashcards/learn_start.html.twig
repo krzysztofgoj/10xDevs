@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rozpocznij naukę{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body p-5">
+                    <h1 class="text-center mb-4">
+                        <i class="bi bi-brain me-2"></i>Rozpocznij naukę
+                    </h1>
+                    
+                    <p class="text-muted text-center mb-4">
+                        Wybierz tryb nauki fiszek. W trybie losowym kierunek będzie zmieniany dla każdej fiszki.
+                    </p>
+
+                    <form method="post" action="{{ path('flashcards_learn_start') }}">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Wybierz kierunek nauki:</label>
+                            
+                            <div class="form-check mb-3 p-3 border rounded">
+                                <input class="form-check-input" type="radio" name="mode" id="mode_q_to_a" 
+                                       value="question_to_answer" checked>
+                                <label class="form-check-label w-100" for="mode_q_to_a">
+                                    <strong>Pytanie → Odpowiedź</strong>
+                                    <small class="d-block text-muted mt-1">
+                                        Wyświetlane będzie pytanie, musisz wpisać odpowiedź
+                                    </small>
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3 p-3 border rounded">
+                                <input class="form-check-input" type="radio" name="mode" id="mode_a_to_q" 
+                                       value="answer_to_question">
+                                <label class="form-check-label w-100" for="mode_a_to_q">
+                                    <strong>Odpowiedź → Pytanie</strong>
+                                    <small class="d-block text-muted mt-1">
+                                        Wyświetlana będzie odpowiedź, musisz wpisać pytanie
+                                    </small>
+                                </label>
+                            </div>
+
+                            <div class="form-check mb-3 p-3 border rounded">
+                                <input class="form-check-input" type="radio" name="mode" id="mode_random" 
+                                       value="random">
+                                <label class="form-check-label w-100" for="mode_random">
+                                    <strong><i class="bi bi-shuffle me-1"></i>Losowy</strong>
+                                    <small class="d-block text-muted mt-1">
+                                        Dla każdej fiszki losowo wybierany będzie kierunek
+                                    </small>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Zasady:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Wielkość liter nie ma znaczenia</li>
+                                <li>Białe znaki na początku i końcu są ignorowane</li>
+                                <li>Masz maksymalnie 2 próby na każdą fiszkę</li>
+                                <li>Możesz przerwać sesję w każdej chwili</li>
+                            </ul>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-play-circle me-2"></i>Rozpocznij naukę
+                            </button>
+                            <a href="{{ path('flashcards_list') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Powrót do listy fiszek
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

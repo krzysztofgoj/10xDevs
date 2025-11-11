@@ -1,0 +1,253 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dodaj fiszkę - 10x Cards{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="text-white mb-3">
+                    <i class="bi bi-plus-circle"></i> Dodaj nową fiszkę
+                </h1>
+                <p class="text-white-50">
+                    Utwórz fiszkę ręcznie, wypełniając pola poniżej
+                </p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="card">
+                <div class="card-body p-5">
+                    <form id="addFlashcardForm">
+                        <div class="mb-4">
+                            <label for="question" class="form-label">
+                                <i class="bi bi-question-circle text-primary"></i> Pytanie <span class="text-danger">*</span>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="question" 
+                                rows="4" 
+                                placeholder="Wpisz pytanie lub przód fiszki..."
+                                required
+                            ></textarea>
+                            <div class="form-text">
+                                Pytanie wyświetlane na przodzie fiszki
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="answer" class="form-label">
+                                <i class="bi bi-check-circle text-success"></i> Odpowiedź <span class="text-danger">*</span>
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="answer" 
+                                rows="4" 
+                                placeholder="Wpisz odpowiedź lub tył fiszki..."
+                                required
+                            ></textarea>
+                            <div class="form-text">
+                                Odpowiedź wyświetlana na tyłe fiszki
+                            </div>
+                        </div>
+
+                        <!-- Error Alert -->
+                        <div class="alert alert-danger d-none" id="errorAlert" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Błąd!</strong> <span id="errorMessage"></span>
+                        </div>
+
+                        <!-- Success Alert -->
+                        <div class="alert alert-success d-none" id="successAlert" role="alert">
+                            <i class="bi bi-check-circle"></i>
+                            <strong>Sukces!</strong> Fiszka została dodana.
+                            <a href="{{ path('flashcards_list') }}" class="alert-link">Zobacz wszystkie fiszki</a>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <a href="{{ path('flashcards_list') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Powrót do listy
+                            </a>
+                            <div>
+                                <button type="button" class="btn btn-secondary me-2" onclick="clearForm()">
+                                    <i class="bi bi-x-circle"></i> Wyczyść
+                                </button>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <i class="bi bi-save"></i> Zapisz fiszkę
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">
+                        <i class="bi bi-eye"></i> Podgląd fiszki
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light" style="min-height: 150px;">
+                                <div class="text-muted small mb-2">
+                                    <i class="bi bi-question-circle"></i> PRZÓD:
+                                </div>
+                                <div id="previewQuestion" class="fw-semibold">
+                                    <em class="text-muted">Pytanie pojawi się tutaj...</em>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="border rounded p-3 bg-light" style="min-height: 150px;">
+                                <div class="text-muted small mb-2">
+                                    <i class="bi bi-check-circle"></i> TYŁ:
+                                </div>
+                                <div id="previewAnswer">
+                                    <em class="text-muted">Odpowiedź pojawi się tutaj...</em>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-info"></i> Wskazówki
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Pytania powinny być jasne i konkretne</li>
+                        <li>Odpowiedzi mogą zawierać dodatkowe wyjaśnienia</li>
+                        <li>Możesz używać znaków specjalnych i emoji 😊</li>
+                        <li>Fiszki możesz później edytować lub usuwać</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Save JWT token
+    {% if jwt_token is defined %}
+        window.JWTAuth.setToken('{{ jwt_token }}');
+    {% endif %}
+
+    const questionInput = document.getElementById('question');
+    const answerInput = document.getElementById('answer');
+    const previewQuestion = document.getElementById('previewQuestion');
+    const previewAnswer = document.getElementById('previewAnswer');
+    const form = document.getElementById('addFlashcardForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const successAlert = document.getElementById('successAlert');
+
+    // Live preview
+    questionInput.addEventListener('input', function() {
+        const text = this.value.trim();
+        if (text) {
+            previewQuestion.innerHTML = escapeHtml(text);
+        } else {
+            previewQuestion.innerHTML = '<em class="text-muted">Pytanie pojawi się tutaj...</em>';
+        }
+    });
+
+    answerInput.addEventListener('input', function() {
+        const text = this.value.trim();
+        if (text) {
+            previewAnswer.innerHTML = escapeHtml(text);
+        } else {
+            previewAnswer.innerHTML = '<em class="text-muted">Odpowiedź pojawi się tutaj...</em>';
+        }
+    });
+
+    // Form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const question = questionInput.value.trim();
+        const answer = answerInput.value.trim();
+
+        if (!question || !answer) {
+            errorMessage.textContent = 'Pytanie i odpowiedź nie mogą być puste';
+            errorAlert.classList.remove('d-none');
+            return;
+        }
+
+        errorAlert.classList.add('d-none');
+        successAlert.classList.add('d-none');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Zapisuję...';
+
+        try {
+            const token = window.JWTAuth.getToken();
+            if (!token) {
+                throw new Error('Brak tokena autentykacji. Zaloguj się ponownie.');
+            }
+
+            const response = await fetch('/api/flashcards/bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    flashcards: [{
+                        question: question,
+                        answer: answer,
+                        source: 'manual'
+                    }]
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.errors || data.error || 'Błąd podczas zapisywania fiszki');
+            }
+
+            // Success!
+            successAlert.classList.remove('d-none');
+            clearForm();
+            
+            // Scroll to success message
+            successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage.textContent = error.message;
+            errorAlert.classList.remove('d-none');
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-save"></i> Zapisz fiszkę';
+        }
+    });
+
+    // Clear form
+    function clearForm() {
+        questionInput.value = '';
+        answerInput.value = '';
+        previewQuestion.innerHTML = '<em class="text-muted">Pytanie pojawi się tutaj...</em>';
+        previewAnswer.innerHTML = '<em class="text-muted">Odpowiedź pojawi się tutaj...</em>';
+        errorAlert.classList.add('d-none');
+    }
+
+    // Helper function
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}
+
+
+

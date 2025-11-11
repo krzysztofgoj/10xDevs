@@ -1,0 +1,233 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard - 10x Cards{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .action-card {
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        cursor: pointer;
+        height: 100%;
+    }
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .action-card-primary:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white !important;
+    }
+    .action-card-success:hover {
+        background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+    }
+    .stat-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        transition: all 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: scale(1.05);
+    }
+    .quick-action-btn {
+        transition: all 0.2s ease;
+    }
+    .quick-action-btn:hover {
+        transform: translateX(5px);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Welcome Header -->
+            <div class="text-center text-white mb-5">
+                <h1 class="display-4 fw-bold mb-3">
+                    Witaj, {{ app.user.email|split('@')[0] }}! 👋
+                </h1>
+                <p class="lead mb-0">
+                    Gotowy na naukę? Wybierz jedną z opcji poniżej
+                </p>
+            </div>
+
+            <!-- Main Action Cards -->
+            <div class="row g-4 mb-5">
+                <!-- Start Learning Card -->
+                <div class="col-md-6">
+                    {% if total_flashcards > 0 %}
+                        <a href="{{ path('flashcards_learn_start') }}" class="text-decoration-none">
+                            <div class="card action-card action-card-primary shadow-lg">
+                                <div class="card-body text-center p-5">
+                                    <div class="mb-4">
+                                        <i class="bi bi-brain" style="font-size: 5rem; color: #667eea;"></i>
+                                    </div>
+                                    <h2 class="card-title mb-3">Rozpocznij naukę</h2>
+                                    <p class="text-muted mb-4">
+                                        Ucz się swoich fiszek w interaktywny sposób z natychmiastowym feedbackiem
+                                    </p>
+                                    <div class="badge bg-success px-4 py-2" style="font-size: 1rem;">
+                                        <i class="bi bi-lightning-fill me-2"></i>Zacznij teraz
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="card shadow-lg" style="opacity: 0.6; cursor: not-allowed;">
+                            <div class="card-body text-center p-5">
+                                <div class="mb-4">
+                                    <i class="bi bi-brain" style="font-size: 5rem; color: #ccc;"></i>
+                                </div>
+                                <h2 class="card-title mb-3 text-muted">Rozpocznij naukę</h2>
+                                <p class="text-muted mb-4">
+                                    Dodaj najpierw fiszki, aby móc rozpocząć naukę
+                                </p>
+                                <div class="badge bg-secondary px-4 py-2" style="font-size: 1rem;">
+                                    <i class="bi bi-lock-fill me-2"></i>Brak fiszek
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- My Flashcards Card -->
+                <div class="col-md-6">
+                    <a href="{{ path('flashcards_list') }}" class="text-decoration-none">
+                        <div class="card action-card action-card-success shadow-lg">
+                            <div class="card-body text-center p-5">
+                                <div class="mb-4">
+                                    <i class="bi bi-collection" style="font-size: 5rem; color: #28a745;"></i>
+                                </div>
+                                <h2 class="card-title mb-3">Moje fiszki</h2>
+                                <p class="text-muted mb-4">
+                                    Przeglądaj, edytuj i zarządzaj swoją kolekcją fiszek
+                                </p>
+                                <div class="badge bg-primary px-4 py-2" style="font-size: 1rem;">
+                                    <i class="bi bi-folder2-open me-2"></i>{{ total_flashcards }} fiszek
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="card shadow-lg mb-4">
+                <div class="card-body p-5">
+                    <h3 class="text-center mb-4">
+                        <i class="bi bi-graph-up text-primary me-2"></i>Twoje statystyki
+                    </h3>
+                    
+                    <div class="row g-4 text-center">
+                        <div class="col-md-4">
+                            <div class="stat-card card border-0">
+                                <div class="card-body p-4">
+                                    <i class="bi bi-collection-fill text-primary mb-3" style="font-size: 2.5rem;"></i>
+                                    <h2 class="display-4 text-primary mb-2">{{ total_flashcards }}</h2>
+                                    <p class="text-muted mb-0">Wszystkich fiszek</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card card border-0">
+                                <div class="card-body p-4">
+                                    <i class="bi bi-magic text-info mb-3" style="font-size: 2.5rem;"></i>
+                                    <h2 class="display-4 text-info mb-2">{{ ai_generated }}</h2>
+                                    <p class="text-muted mb-0">Wygenerowanych AI</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="stat-card card border-0">
+                                <div class="card-body p-4">
+                                    <i class="bi bi-pencil-fill text-success mb-3" style="font-size: 2.5rem;"></i>
+                                    <h2 class="display-4 text-success mb-2">{{ manual_flashcards }}</h2>
+                                    <p class="text-muted mb-0">Dodanych ręcznie</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h3 class="mb-4">
+                        <i class="bi bi-lightning-charge text-warning me-2"></i>Szybkie akcje
+                    </h3>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{{ path('flashcards_generate') }}" class="btn btn-lg btn-outline-primary w-100 quick-action-btn">
+                                <i class="bi bi-magic me-2"></i>Generuj fiszki z AI
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ path('flashcards_add') }}" class="btn btn-lg btn-outline-secondary w-100 quick-action-btn">
+                                <i class="bi bi-plus-circle me-2"></i>Dodaj fiszkę ręcznie
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tips Card -->
+            {% if total_flashcards == 0 %}
+            <div class="alert alert-info mt-4 shadow-sm border-0" style="background: rgba(255, 255, 255, 0.95);">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-lightbulb-fill text-warning me-3" style="font-size: 2rem;"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Wskazówka dla początkujących</h5>
+                        <p class="mb-0">
+                            Nie masz jeszcze żadnych fiszek. Zacznij od <strong>wygenerowania fiszek z AI</strong> 
+                            lub <strong>dodaj pierwszą fiszkę ręcznie</strong>, aby rozpocząć naukę!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% elseif total_flashcards < 5 %}
+            <div class="alert alert-success mt-4 shadow-sm border-0" style="background: rgba(255, 255, 255, 0.95);">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-star-fill text-warning me-3" style="font-size: 2rem;"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Dobry początek! 🎉</h5>
+                        <p class="mb-0">
+                            Masz już {{ total_flashcards }} {{ total_flashcards == 1 ? 'fiszkę' : 'fiszki' }}. 
+                            Dodaj więcej fiszek, aby zwiększyć efektywność nauki!
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-primary mt-4 shadow-sm border-0" style="background: rgba(255, 255, 255, 0.95);">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-rocket-takeoff-fill text-primary me-3" style="font-size: 2rem;"></i>
+                    <div>
+                        <h5 class="alert-heading mb-2">Świetna kolekcja! 🚀</h5>
+                        <p class="mb-0">
+                            Masz {{ total_flashcards }} fiszek. Regularna nauka to klucz do sukcesu. 
+                            <strong>Rozpocznij sesję nauki już teraz!</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Save JWT token to localStorage when dashboard loads
+    {% if jwt_token is defined %}
+        window.JWTAuth.setToken('{{ jwt_token }}');
+        console.log('JWT token saved to localStorage');
+    {% endif %}
+</script>
+{% endblock %}
+

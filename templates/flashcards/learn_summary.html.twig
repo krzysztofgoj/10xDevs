@@ -1,0 +1,127 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Podsumowanie nauki{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            {% if summary.percentage >= 80 %}
+                                <i class="bi bi-trophy-fill text-warning" style="font-size: 4rem;"></i>
+                            {% elseif summary.percentage >= 60 %}
+                                <i class="bi bi-emoji-smile-fill text-success" style="font-size: 4rem;"></i>
+                            {% else %}
+                                <i class="bi bi-emoji-neutral-fill text-primary" style="font-size: 4rem;"></i>
+                            {% endif %}
+                        </div>
+                        
+                        <h1 class="display-4 mb-2">Gratulacje!</h1>
+                        <p class="text-muted">Ukończyłeś sesję nauki</p>
+                    </div>
+
+                    <hr class="my-4">
+
+                    {# Główne statystyki #}
+                    <div class="text-center mb-4">
+                        <h2 class="display-3 mb-2">
+                            <span class="badge bg-primary">{{ summary.percentage }}%</span>
+                        </h2>
+                        <p class="text-muted">Wynik ogólny</p>
+                    </div>
+
+                    {# Szczegółowe statystyki #}
+                    <div class="row g-3 mb-4">
+                        <div class="col-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <div class="h1 mb-2 text-success">
+                                        <i class="bi bi-check-circle-fill"></i>
+                                    </div>
+                                    <h3 class="mb-1">{{ summary.correct }}</h3>
+                                    <small class="text-muted">Poprawne</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="card bg-light border-0">
+                                <div class="card-body text-center">
+                                    <div class="h1 mb-2 text-danger">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </div>
+                                    <h3 class="mb-1">{{ summary.incorrect }}</h3>
+                                    <small class="text-muted">Niepoprawne</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Rozwinięte statystyki #}
+                    <div class="card bg-light border-0 mb-4">
+                        <div class="card-body">
+                            <h6 class="text-muted text-uppercase small mb-3">Szczegóły</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>
+                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                        Poprawne za pierwszym razem
+                                    </span>
+                                    <span class="badge bg-success">{{ summary.first_attempt_correct }}</span>
+                                </li>
+                                <li class="d-flex justify-content-between align-items-center mb-2">
+                                    <span>
+                                        <i class="bi bi-check-circle text-warning me-2"></i>
+                                        Poprawne za drugim razem
+                                    </span>
+                                    <span class="badge bg-warning">{{ summary.second_attempt_correct }}</span>
+                                </li>
+                                <li class="d-flex justify-content-between align-items-center">
+                                    <span>
+                                        <i class="bi bi-card-list text-primary me-2"></i>
+                                        Łącznie fiszek
+                                    </span>
+                                    <span class="badge bg-primary">{{ summary.total }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    {# Motywująca wiadomość #}
+                    <div class="alert alert-{% if summary.percentage >= 80 %}success{% elseif summary.percentage >= 60 %}info{% else %}warning{% endif %} border-0">
+                        <i class="bi bi-lightbulb-fill me-2"></i>
+                        {% if summary.percentage >= 80 %}
+                            <strong>Świetna robota!</strong> Masz doskonałą znajomość materiału. Kontynuuj naukę!
+                        {% elseif summary.percentage >= 60 %}
+                            <strong>Dobra robota!</strong> Jesteś na dobrej drodze. Powtórz materiał, aby utrwalić wiedzę.
+                        {% else %}
+                            <strong>Nie poddawaj się!</strong> Każda nauka wymaga czasu. Spróbuj ponownie za jakiś czas.
+                        {% endif %}
+                    </div>
+
+                    {# Przyciski akcji #}
+                    <div class="d-grid gap-2">
+                        <a href="{{ path('flashcards_learn_start') }}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-arrow-repeat me-2"></i>Rozpocznij nową sesję
+                        </a>
+                        <a href="{{ path('flashcards_list') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-list-ul me-2"></i>Powrót do listy fiszek
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {# Dodatkowe informacje #}
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="bi bi-calendar-check me-1"></i>
+                    Sesja zakończona: {{ "now"|date("d.m.Y H:i") }}
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

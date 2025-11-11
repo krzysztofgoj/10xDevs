@@ -1,0 +1,422 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Generuj fiszki - 10x Cards{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .flashcard-preview {
+        transition: all 0.2s ease;
+    }
+    .flashcard-preview:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.15) !important;
+    }
+    .flashcard-preview.selected {
+        border: 2px solid #667eea !important;
+        background-color: #f8f9ff;
+    }
+    .word-count {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .word-count.valid {
+        color: #198754;
+    }
+    .word-count.invalid {
+        color: #dc3545;
+    }
+    .spinner-border-sm {
+        width: 1rem;
+        height: 1rem;
+        border-width: 0.15em;
+    }
+    .generated-flashcard {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="text-white mb-3">
+                    <i class="bi bi-magic"></i> Generuj fiszki z AI
+                </h1>
+                <p class="text-white-50">
+                    Wklej tekst (minimum 5 słów), a AI wygeneruje dla Ciebie 3-10 fiszek edukacyjnych
+                </p>
+            </div>
+
+            <!-- Input Card -->
+            <div class="card mb-4">
+                <div class="card-body p-4">
+                    <h4 class="mb-3">
+                        <i class="bi bi-file-text text-primary"></i> Tekst źródłowy
+                    </h4>
+                    
+                    <div class="mb-3">
+                        <label for="sourceText" class="form-label">
+                            Wklej lub wpisz tekst do przetworzenia
+                        </label>
+                        <textarea 
+                            class="form-control" 
+                            id="sourceText" 
+                            rows="8" 
+                            placeholder="Wklej tutaj tekst, z którego AI wygeneruje fiszki edukacyjne. Może to być fragment książki, artykułu, notatek z wykładu..."
+                        ></textarea>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <small class="word-count" id="wordCount">Liczba słów: 0 / 1000</small>
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Min. 5 słów, maks. 1000 słów
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button 
+                            class="btn btn-primary btn-lg" 
+                            id="generateBtn"
+                            disabled
+                        >
+                            <i class="bi bi-stars"></i> Generuj fiszki
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading State -->
+            <div class="card mb-4 d-none" id="loadingCard">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status">
+                        <span class="visually-hidden">Generowanie...</span>
+                    </div>
+                    <h5>Generuję fiszki...</h5>
+                    <p class="text-muted mb-0">AI analizuje tekst i tworzy pytania</p>
+                </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div class="alert alert-danger d-none" id="errorAlert" role="alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                <strong>Błąd!</strong> <span id="errorMessage"></span>
+            </div>
+
+            <!-- Generated Flashcards -->
+            <div id="flashcardsContainer" class="d-none">
+                <div class="card mb-4">
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="mb-0">
+                                <i class="bi bi-collection text-success"></i> Wygenerowane fiszki
+                            </h4>
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary me-2" id="selectAllBtn">
+                                    <i class="bi bi-check-all"></i> Zaznacz wszystkie
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" id="deselectAllBtn">
+                                    <i class="bi bi-x"></i> Odznacz wszystkie
+                                </button>
+                            </div>
+                        </div>
+
+                        <p class="text-muted mb-4">
+                            <i class="bi bi-lightbulb"></i> Wybierz fiszki, które chcesz dodać do swojej kolekcji
+                        </p>
+
+                        <div id="flashcardsList" class="row g-3">
+                            <!-- Flashcards will be inserted here by JavaScript -->
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted">
+                                <i class="bi bi-info-circle"></i> 
+                                Wybrano: <strong id="selectedCount">0</strong> fiszek
+                            </span>
+                            <button 
+                                class="btn btn-success btn-lg" 
+                                id="saveSelectedBtn"
+                                disabled
+                            >
+                                <i class="bi bi-plus-circle"></i> Dodaj wybrane fiszki
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Alert -->
+            <div class="alert alert-success d-none" id="successAlert" role="alert">
+                <i class="bi bi-check-circle"></i>
+                <strong>Sukces!</strong> <span id="successMessage"></span>
+                <a href="{{ path('app_profile') }}" class="alert-link">Przejdź do profilu</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+    // Save JWT token to localStorage
+    {% if jwt_token is defined %}
+        window.JWTAuth.setToken('{{ jwt_token }}');
+    {% endif %}
+
+    const sourceTextArea = document.getElementById('sourceText');
+    const wordCountEl = document.getElementById('wordCount');
+    const generateBtn = document.getElementById('generateBtn');
+    const loadingCard = document.getElementById('loadingCard');
+    const errorAlert = document.getElementById('errorAlert');
+    const errorMessage = document.getElementById('errorMessage');
+    const flashcardsContainer = document.getElementById('flashcardsContainer');
+    const flashcardsList = document.getElementById('flashcardsList');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
+    const saveSelectedBtn = document.getElementById('saveSelectedBtn');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const successAlert = document.getElementById('successAlert');
+    const successMessage = document.getElementById('successMessage');
+
+    let generatedFlashcards = [];
+    let selectedFlashcards = new Set();
+
+    // Word count validation
+    sourceTextArea.addEventListener('input', function() {
+        const text = this.value.trim();
+        const wordCount = text ? text.split(/\s+/).length : 0;
+        
+        wordCountEl.textContent = `Liczba słów: ${wordCount} / 1000`;
+        
+        if (wordCount >= 5 && wordCount <= 1000) {
+            wordCountEl.classList.remove('invalid');
+            wordCountEl.classList.add('valid');
+            generateBtn.disabled = false;
+        } else {
+            wordCountEl.classList.remove('valid');
+            wordCountEl.classList.add('invalid');
+            generateBtn.disabled = true;
+        }
+    });
+
+    // Generate flashcards
+    generateBtn.addEventListener('click', async function() {
+        const sourceText = sourceTextArea.value.trim();
+        
+        // Hide previous results
+        errorAlert.classList.add('d-none');
+        flashcardsContainer.classList.add('d-none');
+        successAlert.classList.add('d-none');
+        
+        // Show loading
+        loadingCard.classList.remove('d-none');
+        generateBtn.disabled = true;
+
+        try {
+            const token = window.JWTAuth.getToken();
+            if (!token) {
+                throw new Error('Brak tokena autentykacji. Zaloguj się ponownie.');
+            }
+
+            const response = await fetch('/api/flashcards/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ sourceText })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.errors || data.error || 'Wystąpił błąd podczas generowania fiszek');
+            }
+
+            generatedFlashcards = data;
+            selectedFlashcards.clear();
+            renderFlashcards();
+            
+            // Show flashcards container
+            flashcardsContainer.classList.remove('d-none');
+            
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage.textContent = error.message;
+            errorAlert.classList.remove('d-none');
+        } finally {
+            loadingCard.classList.add('d-none');
+            generateBtn.disabled = false;
+        }
+    });
+
+    // Render flashcards
+    function renderFlashcards() {
+        flashcardsList.innerHTML = '';
+        
+        generatedFlashcards.forEach((flashcard, index) => {
+            const isSelected = selectedFlashcards.has(index);
+            
+            const col = document.createElement('div');
+            col.className = 'col-md-6';
+            
+            col.innerHTML = `
+                <div class="flashcard-preview card h-100 ${isSelected ? 'selected' : ''}" 
+                     style="cursor: pointer;" 
+                     data-index="${index}">
+                    <div class="card-body">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" 
+                                   id="flashcard${index}" 
+                                   ${isSelected ? 'checked' : ''}>
+                            <label class="form-check-label fw-bold" for="flashcard${index}">
+                                Fiszka ${index + 1}
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">
+                                <i class="bi bi-question-circle"></i> Pytanie:
+                            </div>
+                            <div class="fw-semibold">${escapeHtml(flashcard.question)}</div>
+                        </div>
+                        <div>
+                            <div class="text-muted small mb-1">
+                                <i class="bi bi-check-circle"></i> Odpowiedź:
+                            </div>
+                            <div>${escapeHtml(flashcard.answer)}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Toggle selection on click
+            const card = col.querySelector('.flashcard-preview');
+            const checkbox = col.querySelector('input[type="checkbox"]');
+            
+            card.addEventListener('click', function(e) {
+                if (e.target.type !== 'checkbox') {
+                    checkbox.checked = !checkbox.checked;
+                }
+                toggleFlashcard(index);
+            });
+            
+            checkbox.addEventListener('change', function(e) {
+                e.stopPropagation();
+                toggleFlashcard(index);
+            });
+            
+            flashcardsList.appendChild(col);
+        });
+        
+        updateSelectedCount();
+    }
+
+    // Toggle flashcard selection
+    function toggleFlashcard(index) {
+        if (selectedFlashcards.has(index)) {
+            selectedFlashcards.delete(index);
+        } else {
+            selectedFlashcards.add(index);
+        }
+        renderFlashcards();
+    }
+
+    // Select all
+    selectAllBtn.addEventListener('click', function() {
+        selectedFlashcards.clear();
+        generatedFlashcards.forEach((_, index) => selectedFlashcards.add(index));
+        renderFlashcards();
+    });
+
+    // Deselect all
+    deselectAllBtn.addEventListener('click', function() {
+        selectedFlashcards.clear();
+        renderFlashcards();
+    });
+
+    // Update selected count
+    function updateSelectedCount() {
+        const count = selectedFlashcards.size;
+        selectedCountEl.textContent = count;
+        saveSelectedBtn.disabled = count === 0;
+    }
+
+    // Save selected flashcards
+    saveSelectedBtn.addEventListener('click', async function() {
+        if (selectedFlashcards.size === 0) return;
+
+        saveSelectedBtn.disabled = true;
+        errorAlert.classList.add('d-none');
+        successAlert.classList.add('d-none');
+
+        try {
+            const flashcardsToSave = Array.from(selectedFlashcards).map(index => ({
+                question: generatedFlashcards[index].question,
+                answer: generatedFlashcards[index].answer,
+                source: 'ai'
+            }));
+
+            const token = window.JWTAuth.getToken();
+            if (!token) {
+                throw new Error('Brak tokena autentykacji. Zaloguj się ponownie.');
+            }
+
+            const response = await fetch('/api/flashcards/bulk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ flashcards: flashcardsToSave })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.errors || data.error || 'Wystąpił błąd podczas zapisywania fiszek');
+            }
+
+            // Show success message
+            successMessage.textContent = `Zapisano ${data.length} fiszek!`;
+            successAlert.classList.remove('d-none');
+            
+            // Scroll to success message
+            successAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Clear form
+            sourceTextArea.value = '';
+            wordCountEl.textContent = 'Liczba słów: 0 / 1000';
+            wordCountEl.classList.remove('valid', 'invalid');
+            generateBtn.disabled = true;
+            flashcardsContainer.classList.add('d-none');
+            generatedFlashcards = [];
+            selectedFlashcards.clear();
+
+        } catch (error) {
+            console.error('Error:', error);
+            errorMessage.textContent = error.message;
+            errorAlert.classList.remove('d-none');
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } finally {
+            saveSelectedBtn.disabled = false;
+        }
+    });
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}
+

@@ -1,0 +1,131 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nauka - Fiszka {{ current_index }}/{{ total }}{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            {# Progress bar #}
+            <div class="mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="text-muted">
+                        <i class="bi bi-card-checklist me-2"></i>Postęp
+                    </span>
+                    <span class="badge bg-primary">{{ current_index }} / {{ total }}</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar" role="progressbar" 
+                         style="width: {{ (current_index / total * 100)|round }}%"
+                         aria-valuenow="{{ current_index }}" 
+                         aria-valuemin="0" 
+                         aria-valuemax="{{ total }}">
+                    </div>
+                </div>
+            </div>
+
+            {# Kierunek nauki #}
+            <div class="text-center mb-3">
+                <span class="badge bg-info">
+                    {% if direction == 'question_to_answer' %}
+                        <i class="bi bi-arrow-right me-1"></i>Pytanie → Odpowiedź
+                    {% else %}
+                        <i class="bi bi-arrow-left me-1"></i>Odpowiedź → Pytanie
+                    {% endif %}
+                </span>
+            </div>
+
+            {# Wynik poprzedniej próby #}
+            {% if previous_result and previous_result.attempts == 1 and not previous_result.correct %}
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-x-circle-fill me-3 fs-4"></i>
+                    <div class="flex-grow-1">
+                        <strong>Niepoprawna odpowiedź!</strong><br>
+                        <small>Twoja odpowiedź: <em>{{ previous_result.user_answers[0] }}</em></small><br>
+                        <small class="text-muted">Spróbuj ponownie. To Twoja ostatnia szansa!</small>
+                    </div>
+                </div>
+            {% endif %}
+
+            {# Karta z fiszką #}
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <h5 class="text-muted text-uppercase small mb-3">
+                            {% if attempt_number == 1 %}
+                                Pierwsza próba
+                            {% else %}
+                                <span class="text-danger">Druga próba (ostatnia!)</span>
+                            {% endif %}
+                        </h5>
+                        <h2 class="display-6 mb-0">{{ prompt }}</h2>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <form method="post" action="{{ path('flashcards_learn_check') }}" id="answerForm">
+                        <div class="mb-4">
+                            <label for="answer" class="form-label fw-bold">
+                                Twoja odpowiedź:
+                            </label>
+                            <textarea 
+                                class="form-control form-control-lg" 
+                                id="answer" 
+                                name="answer" 
+                                rows="3" 
+                                required 
+                                autofocus
+                                placeholder="Wpisz odpowiedź tutaj..."
+                            ></textarea>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Wielkość liter nie ma znaczenia
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-check-circle me-2"></i>Sprawdź odpowiedź
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {# Przyciski akcji #}
+            <div class="d-flex justify-content-between">
+                <form method="post" action="{{ path('flashcards_learn_quit') }}" 
+                      onsubmit="return confirm('Czy na pewno chcesz przerwać sesję nauki?');">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle me-2"></i>Przerwij sesję
+                    </button>
+                </form>
+
+                <div class="text-muted small">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    Poprawna odpowiedź: <span class="d-none" id="hint">{{ expected_answer }}</span>
+                    <button type="button" class="btn btn-link btn-sm p-0" onclick="document.getElementById('hint').classList.toggle('d-none')">
+                        Pokaż/Ukryj
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-focus na pole odpowiedzi
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('answer').focus();
+});
+
+// Obsługa Enter w textarea (Ctrl+Enter wysyła formularz)
+document.getElementById('answer').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && e.ctrlKey) {
+        e.preventDefault();
+        document.getElementById('answerForm').submit();
+    }
+});
+</script>
+{% endblock %}
+

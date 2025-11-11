@@ -1,0 +1,119 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  tests:
+    name: PHPUnit Tests (PHP ${{ matrix.php-version }})
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.3']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: mbstring, intl, pdo_sqlite, pdo_pgsql, zip, xml
+          coverage: xdebug
+          tools: composer:v2
+      
+      - name: Validate composer.json and composer.lock
+        run: composer validate --strict
+      
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v3
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php-version }}-composer-
+      
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+      
+      - name: Generate JWT keys
+        run: |
+          mkdir -p config/jwt
+          openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:testpassphrase
+          openssl pkey -in config/jwt/private.pem -passin pass:testpassphrase -out config/jwt/public.pem -pubout
+          chmod 644 config/jwt/private.pem config/jwt/public.pem
+      
+      - name: Setup environment variables
+        run: |
+          echo "APP_ENV=test" >> $GITHUB_ENV
+          echo "APP_SECRET=test_secret_key_for_ci" >> $GITHUB_ENV
+          echo "JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem" >> $GITHUB_ENV
+          echo "JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem" >> $GITHUB_ENV
+          echo "JWT_PASSPHRASE=testpassphrase" >> $GITHUB_ENV
+          echo "OPENAI_API_KEY=sk-test-mock-key" >> $GITHUB_ENV
+      
+      - name: Create database schema
+        run: |
+          # SQLite in-memory is used for tests (configured in config/packages/test/doctrine.yaml)
+          # Schema is created automatically by BaseWebTestCase, but we can create it here for safety
+          php bin/console doctrine:schema:create --env=test || true
+      
+      - name: Run PHPUnit tests
+        run: vendor/bin/phpunit --coverage-text --coverage-clover=coverage.xml
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+          verbose: true
+        continue-on-error: true
+      
+      - name: Archive test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results-php-${{ matrix.php-version }}
+          path: |
+            var/log/
+            coverage.xml
+        continue-on-error: true
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, zip, xml
+          tools: composer:v2
+      
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+      
+      - name: Check PHP syntax
+        run: find src tests -name "*.php" -exec php -l {} \; | grep -v "No syntax errors"
+        continue-on-error: true
+      
+      - name: Validate Doctrine schema
+        run: |
+          mkdir -p config/jwt
+          openssl genpkey -out config/jwt/private.pem -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -aes256 -pass pass:testpassphrase
+          openssl pkey -in config/jwt/private.pem -passin pass:testpassphrase -out config/jwt/public.pem -pubout
+          php bin/console doctrine:schema:validate --skip-sync --env=test || true
+        continue-on-error: true
+

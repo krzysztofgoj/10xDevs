@@ -1,0 +1,9 @@
+services:
+    # Use Mock Flashcard Generator in tests to avoid API costs
+    App\Service\FlashcardGeneratorInterface:
+        class: App\Service\MockFlashcardGenerator
+    
+    # Provide a dummy OpenAI client for tests (not used, but needed for container compilation)
+    OpenAI\Client:
+        synthetic: true
+

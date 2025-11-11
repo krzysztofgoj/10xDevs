@@ -1,0 +1,7 @@
+doctrine:
+    dbal:
+        # Use SQLite in-memory for tests - faster and no setup required
+        url: 'sqlite:///:memory:'
+        driver: 'pdo_sqlite'
+        charset: utf8
+

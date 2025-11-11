@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pl">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}10x Cards{% endblock %}</title>
+        
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+        
+        {% block stylesheets %}
+        <style>
+            body {
+                min-height: 100vh;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            }
+            .card {
+                border: none;
+                border-radius: 1rem;
+                box-shadow: 0 0.5rem 1rem 0 rgba(0, 0, 0, 0.1);
+            }
+            .navbar {
+                background: rgba(255, 255, 255, 0.95) !important;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            }
+        </style>
+        {% endblock %}
+    </head>
+    <body>
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <div class="container">
+                <a class="navbar-brand fw-bold" href="{% if app.user %}{{ path('app_dashboard') }}{% else %}{{ path('app_home') }}{% endif %}">
+                    <i class="bi bi-lightbulb-fill text-primary"></i> 10x Cards
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        {% if app.user %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_dashboard') }}">
+                                    <i class="bi bi-house-door"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('flashcards_list') }}">
+                                    <i class="bi bi-collection"></i> Moje fiszki
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('flashcards_learn_start') }}">
+                                    <i class="bi bi-brain"></i> Nauka
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-plus-circle"></i> Dodaj
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('flashcards_generate') }}">
+                                            <i class="bi bi-magic"></i> Generuj z AI
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{{ path('flashcards_add') }}">
+                                            <i class="bi bi-pencil"></i> Dodaj ręcznie
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_profile') }}">
+                                    <i class="bi bi-person-circle"></i> Profil
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_logout') }}" id="logoutLink">
+                                    <i class="bi bi-box-arrow-right"></i> Wyloguj
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_login') }}">
+                                    <i class="bi bi-box-arrow-in-right"></i> Logowanie
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ path('app_register') }}">
+                                    <i class="bi bi-person-plus"></i> Rejestracja
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Flash Messages -->
+        <div class="container">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
+
+        <!-- Main Content -->
+        {% block body %}{% endblock %}
+
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        
+        <!-- JWT Token Management -->
+        <script>
+            // Global JWT token management
+            window.JWTAuth = {
+                setToken: function(token) {
+                    localStorage.setItem('jwt_token', token);
+                },
+                getToken: function() {
+                    return localStorage.getItem('jwt_token');
+                },
+                removeToken: function() {
+                    localStorage.removeItem('jwt_token');
+                },
+                hasToken: function() {
+                    return !!this.getToken();
+                }
+            };
+
+            // Handle logout - remove JWT token
+            document.addEventListener('DOMContentLoaded', function() {
+                const logoutLink = document.getElementById('logoutLink');
+                if (logoutLink) {
+                    logoutLink.addEventListener('click', function() {
+                        window.JWTAuth.removeToken();
+                        console.log('JWT token removed from localStorage');
+                    });
+                }
+            });
+        </script>
+        
+        {% block javascripts %}
+        {% endblock %}
+    </body>
+</html>
+
