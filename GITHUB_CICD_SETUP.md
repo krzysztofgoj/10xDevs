@@ -132,6 +132,33 @@ na:
 
 ## 🐛 Troubleshooting
 
+### Problem: Deprecated actions error
+**Objaw:**
+```
+Error: This request has been automatically failed because it uses a deprecated version
+```
+
+**Rozwiązanie:**
+✅ **JUŻ NAPRAWIONE!** Workflow używa najnowszych wersji:
+- `actions/checkout@v4`
+- `actions/cache@v4`
+- `actions/upload-artifact@v4`
+- `codecov/codecov-action@v4`
+
+### Problem: Composer validation fails
+**Objaw:**
+```
+composer validate --strict
+# Publish errors
+- name : The property name is required
+- description : The property description is required
+```
+
+**Rozwiązanie:**
+✅ **JUŻ NAPRAWIONE!** `composer.json` zawiera wymagane pola:
+- `name`: `10xdevs/flashcards`
+- `description`: Pełny opis projektu
+
 ### Problem: Workflow nie uruchamia się
 **Rozwiązanie:**
 - Upewnij się że pushowałeś na branch `main` lub `develop`

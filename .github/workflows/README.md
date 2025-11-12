@@ -12,14 +12,14 @@
 
 #### Job 1: `tests`
 1. ✅ Setup PHP 8.3 z rozszerzeniami (pdo_sqlite, intl, mbstring, xml, zip)
-2. ✅ Cache Composer dependencies (szybsze buildy)
+2. ✅ Cache Composer dependencies (szybsze buildy) - `actions/cache@v4`
 3. ✅ Instaluje dependencies (`composer install`)
 4. ✅ Generuje klucze JWT (RSA 4096-bit, passphrase: `testpassphrase`)
 5. ✅ Tworzy schemat bazy SQLite in-memory
 6. ✅ Uruchamia wszystkie testy (34 testy, 144 assertions)
 7. ✅ Generuje coverage report (XML + text)
-8. ✅ Uploaduje coverage do Codecov (jeśli `CODECOV_TOKEN` jest ustawiony)
-9. ✅ Archiwizuje logi i coverage jako artifacts
+8. ✅ Uploaduje coverage do Codecov - `codecov-action@v4` (jeśli `CODECOV_TOKEN` jest ustawiony)
+9. ✅ Archiwizuje logi i coverage jako artifacts - `upload-artifact@v4`
 
 #### Job 2: `code-quality`
 1. ✅ Setup PHP 8.3
