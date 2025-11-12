@@ -1,4 +1,6 @@
 {
+    "name": "10xdevs/flashcards",
+    "description": "Flashcard learning platform with AI-powered card generation using OpenAI",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
