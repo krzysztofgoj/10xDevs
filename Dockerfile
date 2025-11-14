@@ -39,13 +39,22 @@ COPY composer.json composer.lock ./
 # Using install instead of update for production builds
 RUN composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader
 
-# Copy application files
-COPY . /var/www/html/
+# Copy application files (excluding vendor which is already installed)
+COPY --chown=www-data:www-data . /var/www/html/
+
+# Ensure vendor directory exists (reinstall if it was overwritten)
+RUN if [ ! -d "vendor" ] || [ ! -f "vendor/autoload_runtime.php" ]; then \
+        composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader; \
+    fi
+
+# Run composer scripts now that all files are in place
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative || true
 
 # Create var directories and set permissions
 RUN mkdir -p var/cache var/log && \
     chown -R www-data:www-data /var/www/html && \
-    chmod -R 775 var/cache var/log
+    chmod -R 775 var/cache var/log && \
+    chmod -R 755 vendor || true
 
 # Set Apache environment variable for DocumentRoot
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
