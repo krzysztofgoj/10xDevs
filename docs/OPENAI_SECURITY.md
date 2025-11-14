@@ -2,7 +2,7 @@
 
 ## Wielowarstwowa ochrona przed kosztami
 
-System zawiera **5 poziomów** zabezpieczeń przed przekroczeniem budżetu:
+System powinien zawierać **5 poziomów** zabezpieczeń przed przekroczeniem budżetu:
 
 ### 1️⃣ Rate Limiting (poziom użytkownika)
 
@@ -16,7 +16,7 @@ flashcard_generator:
     interval: '1 hour'
 ```
 
-**Jak działa:**
+**Jak powinno działać:**
 - Każdy użytkownik może wygenerować maksymalnie 10 razy na godzinę
 - Sliding window = płynnie przez godzinę, nie reset o pełnej godzinie
 - Po przekroczeniu: HTTP 429 Too Many Requests
@@ -33,15 +33,15 @@ private const DAILY_LIMIT_USD = 5.00;
 private const MONTHLY_LIMIT_USD = 50.00;
 ```
 
-**Jak działa:**
-- Każde wywołanie API jest śledzone
-- Koszty są szacowane na podstawie użytych tokenów
+**Jak powinno działać:**
+- Każde wywołanie API powinno być śledzone
+- Koszty powinny być szacowane na podstawie użytych tokenów
 - Po przekroczeniu limitu: HTTP 503 Service Unavailable
-- Resetuje się automatycznie każdego dnia/miesiąca
+- Powinno resetować się automatycznie każdego dnia/miesiąca
 
 ### 3️⃣ Model Selection (oszczędność)
 
-**Używamy:** `gpt-4o-mini` zamiast `gpt-4`
+**Powinien używać:** `gpt-4o-mini` zamiast `gpt-4`
 
 ```php
 private const MODEL = 'gpt-4o-mini';
@@ -61,14 +61,14 @@ private const MODEL = 'gpt-4o-mini';
 private const MAX_TOKENS = 2000;
 ```
 
-**Jak działa:**
+**Jak powinno działać:**
 - Ogranicza maksymalną długość odpowiedzi od OpenAI
 - Zapobiega długim (i drogim) odpowiedziom
 - ~3-10 fiszek mieści się w tym limicie
 
 ### 5️⃣ Logging & Monitoring (widoczność)
 
-**Co jest logowane:**
+**Co powinno być logowane:**
 - ✅ Każde wywołanie API (start + koniec)
 - ✅ Użyte tokeny
 - ✅ Szacowany koszt w USD
@@ -81,7 +81,7 @@ private const MAX_TOKENS = 2000;
 tail -f var/log/dev.log | grep OpenAI
 
 # Lub lokalnie
-docker exec be66879af885 tail -f var/log/dev.log | grep OpenAI
+docker exec <container> tail -f var/log/dev.log | grep OpenAI
 ```
 
 ---
@@ -90,7 +90,7 @@ docker exec be66879af885 tail -f var/log/dev.log | grep OpenAI
 
 ### Sprawdź aktual użycie
 
-Dodaj endpoint administracyjny (opcjonalnie):
+System powinien umożliwiać sprawdzenie użycia przez endpoint administracyjny (opcjonalnie):
 
 ```php
 #[Route('/admin/openai-stats', name: 'admin_openai_stats')]
@@ -121,10 +121,10 @@ Odpowiedź:
 
 ### Dashboard OpenAI
 
-Sprawdź **rzeczywiste** koszty w dashboard OpenAI:
+System powinien wymagać sprawdzania rzeczywistych kosztów w dashboard OpenAI:
 - https://platform.openai.com/usage
 
-**Ustaw limity w OpenAI:**
+**Ustawianie limitów w OpenAI:**
 1. Idź do: https://platform.openai.com/account/billing/limits
 2. Ustaw "Hard limit" na np. $10
 3. OpenAI **zatrzyma** API po przekroczeniu
@@ -135,7 +135,7 @@ Sprawdź **rzeczywiste** koszty w dashboard OpenAI:
 
 ### Zmiana limitów aplikacji
 
-Edytuj: `src/Service/OpenAICostTracker.php`
+System powinien umożliwiać zmianę limitów w `src/Service/OpenAICostTracker.php`:
 
 ```php
 private const DAILY_LIMIT_USD = 5.00;    // ← Zmień tutaj
@@ -144,7 +144,7 @@ private const MONTHLY_LIMIT_USD = 50.00; // ← Zmień tutaj
 
 ### Zmiana rate limitów
 
-Edytuj: `config/packages/rate_limiter.yaml`
+System powinien umożliwiać zmianę limitów w `config/packages/rate_limiter.yaml`:
 
 ```yaml
 flashcard_generator:
@@ -154,7 +154,7 @@ flashcard_generator:
 
 ### Zmiana modelu AI
 
-Edytuj: `src/Service/OpenAIFlashcardGenerator.php`
+System powinien umożliwiać zmianę modelu w `src/Service/OpenAIFlashcardGenerator.php`:
 
 ```php
 private const MODEL = 'gpt-4o-mini'; // ← Zmień na:
@@ -170,7 +170,7 @@ private const MODEL = 'gpt-4o-mini'; // ← Zmień na:
 
 ### Przełącz na Mock Generator
 
-W `config/services.yaml`:
+System powinien umożliwiać przełączenie na Mock w `config/services.yaml`:
 
 ```yaml
 # Zakomentuj OpenAI
@@ -185,7 +185,7 @@ App\Service\FlashcardGeneratorInterface:
 ### Wyczyść cache
 
 ```bash
-docker exec be66879af885 php bin/console cache:clear
+docker exec <container> php bin/console cache:clear
 ```
 
 ---
@@ -207,7 +207,7 @@ docker exec be66879af885 php bin/console cache:clear
 - 240 × $0.0001 = ~$0.024/dzień
 - ~$0.72/miesiąc
 
-**Wniosek:** Przy normalnym użyciu będziesz wydawać **grosze**, nie dolary!
+**Wniosek:** Przy normalnym użyciu koszty powinny być minimalne.
 
 ---
 
@@ -215,7 +215,7 @@ docker exec be66879af885 php bin/console cache:clear
 
 ### Email przy wysokim użyciu (opcjonalnie)
 
-Dodaj w `OpenAICostTracker.php`:
+System może zawierać powiadomienia przy wysokim użyciu:
 
 ```php
 public function recordUsage(float $costUsd, int $tokensUsed): void
@@ -276,6 +276,3 @@ public function recordUsage(float $costUsd, int $tokensUsed): void
 - [OpenAI Usage Dashboard](https://platform.openai.com/usage)
 - [OpenAI Billing Settings](https://platform.openai.com/account/billing/limits)
 - [Rate Limiting Best Practices](https://platform.openai.com/docs/guides/rate-limits)
-
-
-

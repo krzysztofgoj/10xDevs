@@ -2,7 +2,7 @@
 
 ## Architektura autentykacji
 
-System został zaprojektowany tak, aby **frontend (Twig)** i **API** korzystały z **tej samej metody autentykacji - JWT tokenów**.
+System powinien być zaprojektowany tak, aby **frontend (Twig)** i **API** korzystały z **tej samej metody autentykacji - JWT tokenów**.
 
 ---
 
@@ -24,7 +24,7 @@ Sesja PHP + przekierowanie do profilu
 
 ### 2. Generowanie JWT tokena
 
-Po zalogowaniu, kontroler automatycznie generuje JWT token:
+Po zalogowaniu, kontroler powinien automatycznie generować JWT token:
 
 ```php
 // SecurityController::profile()
@@ -38,7 +38,7 @@ return $this->render('security/profile.html.twig', [
 
 ### 3. Zapisywanie tokena w przeglądarce
 
-JavaScript automatycznie zapisuje token w `localStorage`:
+JavaScript powinien automatycznie zapisywać token w `localStorage`:
 
 ```javascript
 // W szablonie Twig
@@ -47,11 +47,11 @@ JavaScript automatycznie zapisuje token w `localStorage`:
 {% endif %}
 ```
 
-Token jest przechowywany w `localStorage` pod kluczem `jwt_token`.
+Token powinien być przechowywany w `localStorage` pod kluczem `jwt_token`.
 
 ### 4. Używanie tokena w żądaniach API
 
-Wszystkie żądania AJAX do API używają tokena z `localStorage`:
+Wszystkie żądania AJAX do API powinny używać tokena z `localStorage`:
 
 ```javascript
 const token = window.JWTAuth.getToken();
@@ -68,7 +68,7 @@ const response = await fetch('/api/flashcards/generate', {
 
 ### 5. Wylogowanie
 
-Przy wylogowaniu token jest usuwany z `localStorage`:
+Przy wylogowaniu token powinien być usuwany z `localStorage`:
 
 ```javascript
 // Automatycznie przy kliknięciu "Wyloguj"
@@ -79,7 +79,7 @@ window.JWTAuth.removeToken();
 
 ## 🛠️ API zarządzania tokenem
 
-Globalny obiekt `window.JWTAuth` dostępny na wszystkich stronach:
+Globalny obiekt `window.JWTAuth` powinien być dostępny na wszystkich stronach:
 
 ```javascript
 // Zapisz token
@@ -135,7 +135,7 @@ access_control:
 
 ---
 
-## 🎯 Dlaczego to działa?
+## 🎯 Dlaczego to powinno działać?
 
 ### Frontend (Twig) + JavaScript
 
@@ -154,7 +154,7 @@ access_control:
 
 ---
 
-## 📝 Przykład użycia
+## 📝 Wymagania implementacji
 
 ### W kontrolerze (generowanie tokena)
 
@@ -223,24 +223,6 @@ console.log('Has token:', window.JWTAuth.hasToken());
 ```javascript
 // F12 -> Application -> Local Storage
 localStorage.getItem('jwt_token');
-```
-
-### Dekoduj token (tylko payload, bez weryfikacji)
-
-```javascript
-function parseJwt(token) {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-        atob(base64).split('').map(c => 
-            '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        ).join('')
-    );
-    return JSON.parse(jsonPayload);
-}
-
-const token = window.JWTAuth.getToken();
-console.log('Token payload:', parseJwt(token));
 ```
 
 ---
@@ -346,6 +328,3 @@ console.log('localStorage available:', typeof(Storage) !== 'undefined');
 - [ ] **Remember me** - dłuższy TTL dla wybranych użytkowników
 - [ ] **Multi-device logout** - wycofanie wszystkich tokenów
 - [ ] **Rate limiting** - ochrona przed brute-force
-
-
-

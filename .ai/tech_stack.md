@@ -50,6 +50,3 @@
 
 - **Port aplikacji**: 8080 (mapowany na 80 w kontenerze)
 - **Port PostgreSQL**: 5433 (mapowany na 5432 w kontenerze)
-
-
-

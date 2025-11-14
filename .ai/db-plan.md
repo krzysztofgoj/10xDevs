@@ -2,7 +2,7 @@
 
 ## Wprowadzenie
 
-Ten dokument opisuje kompleksowy schemat bazy danych dla aplikacji 10x-cards. Schemat został zaprojektowany na podstawie wymagań z PRD oraz sesji planistycznej, z uwzględnieniem najlepszych praktyk projektowania baz danych PostgreSQL i integracji z Symfony/Doctrine.
+Ten dokument opisuje kompleksowy schemat bazy danych dla aplikacji 10x-cards. Schemat powinien być zaprojektowany na podstawie wymagań z PRD oraz sesji planistycznej, z uwzględnieniem najlepszych praktyk projektowania baz danych PostgreSQL i integracji z Symfony/Doctrine.
 
 ## Architektura
 
@@ -15,7 +15,7 @@ Ten dokument opisuje kompleksowy schemat bazy danych dla aplikacji 10x-cards. Sc
 
 ### 1. user
 
-Tabela przechowująca informacje o użytkownikach systemu. Integruje się z Symfony Security Component.
+Tabela przechowująca informacje o użytkownikach systemu. Powinna integrować się z Symfony Security Component.
 
 **Kolumny:**
 - `id` (INTEGER, PRIMARY KEY, AUTO_INCREMENT) - unikalny identyfikator użytkownika
@@ -31,8 +31,8 @@ Tabela przechowująca informacje o użytkownikach systemu. Integruje się z Symf
 - INDEX na `email` (dla szybkiego wyszukiwania przy logowaniu)
 
 **Uwagi:**
-- Tabela będzie mapowana na encję Doctrine implementującą `UserInterface` z Symfony Security
-- Hasła będą hashowane przy użyciu Symfony PasswordHasher (domyślnie bcrypt/argon2)
+- Tabela powinna być mapowana na encję Doctrine implementującą `UserInterface` z Symfony Security
+- Hasła powinny być hashowane przy użyciu Symfony PasswordHasher (domyślnie bcrypt/argon2)
 - Soft delete nie jest wymagany - zgodnie z PRD użytkownik może całkowicie usunąć konto
 
 ---
@@ -161,7 +161,7 @@ flashcard (1) ──< (1) repetition_record
 
 ### Zasady bezpieczeństwa na poziomie wierszy (RLS)
 
-W kontekście Symfony/Doctrine, bezpieczeństwo jest zapewniane przez:
+W kontekście Symfony/Doctrine, bezpieczeństwo powinno być zapewniane przez:
 - **Autoryzację w warstwie aplikacji** - wszystkie zapytania filtrowane przez user_id
 - **Repository pattern** - metody w repozytoriach zawsze filtrują po zalogowanym użytkowniku
 - **Symfony Security** - kontrola dostępu na poziomie kontrolerów
@@ -171,7 +171,7 @@ W kontekście Symfony/Doctrine, bezpieczeństwo jest zapewniane przez:
 ### Hashowanie haseł
 
 - Użycie Symfony PasswordHasher (domyślnie bcrypt lub argon2)
-- Hasła nigdy nie są przechowywane w formie plaintext
+- Hasła nigdy nie powinny być przechowywane w formie plaintext
 - Minimalna długość hasła: 8 znaków (walidacja w formularzu)
 
 ## Wydajność i optymalizacja
@@ -209,20 +209,20 @@ W kontekście Symfony/Doctrine, bezpieczeństwo jest zapewniane przez:
 ### Wymagania:
 
 1. **Prawo do wglądu w dane** (Art. 15 RODO)
-   - Użytkownik może wyeksportować wszystkie swoje dane
+   - Użytkownik powinien móc wyeksportować wszystkie swoje dane
    - Endpoint API zwracający JSON z wszystkimi fiszkami i metadanymi
 
 2. **Prawo do usunięcia danych** (Art. 17 RODO)
-   - Usunięcie konta usuwa wszystkie powiązane dane (CASCADE)
+   - Usunięcie konta powinno usuwać wszystkie powiązane dane (CASCADE)
    - Hard delete - dane są trwale usuwane z bazy
 
 3. **Minimalizacja danych**
-   - Przechowujemy tylko niezbędne dane
+   - Powinny być przechowywane tylko niezbędne dane
    - Brak zbędnych metadanych w MVP
 
 ## Migracje
 
-Wszystkie zmiany schematu bazy danych będą wykonywane poprzez migracje Doctrine:
+Wszystkie zmiany schematu bazy danych powinny być wykonywane poprzez migracje Doctrine:
 - Pliki migracji w katalogu `migrations/`
 - Konwencja nazewnictwa: `VersionYYYYMMDDHHMMSS.php`
 - Migracje są wersjonowane i mogą być rollbackowane
@@ -238,12 +238,11 @@ Następujące funkcjonalności mogą wymagać dodatkowych tabel w przyszłości:
 
 ## Podsumowanie
 
-Schemat bazy danych jest zaprojektowany z myślą o:
+Schemat bazy danych powinien być zaprojektowany z myślą o:
 - **Skalowalności** - indeksy na krytycznych kolumnach
 - **Bezpieczeństwie** - foreign keys z CASCADE, hashowanie haseł
 - **Wydajności** - optymalne indeksy dla najczęstszych zapytań
 - **Zgodności z RODO** - możliwość eksportu i usunięcia danych
 - **Prostocie** - minimalna złożoność dla MVP
 
-Schemat jest gotowy do implementacji poprzez migracje Doctrine.
-
+Schemat powinien być gotowy do implementacji poprzez migracje Doctrine.

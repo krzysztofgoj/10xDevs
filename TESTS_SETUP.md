@@ -1,290 +1,210 @@
-# ✅ Testy zostały zaimplementowane!
+# ✅ Wymagania dotyczące testów
 
-## Co zostało dodane?
+## Wymagania
 
-### 📁 Nowe pliki
+Projekt powinien zawierać kompleksową suite testów automatycznych.
 
-#### Testy funkcjonalne
-- `tests/Functional/BaseWebTestCase.php` - bazowa klasa z helperami
-- `tests/Functional/AuthControllerTest.php` - 10 testów autoryzacji
-- `tests/Functional/FlashcardControllerTest.php` - 20 testów CRUD fiszek
+## 🚀 Jak powinny działać testy?
 
-#### Testy jednostkowe
-- `tests/Unit/AuthServiceTest.php` - 6 testów serwisu autoryzacji
-
-#### Fixtures
-- `src/DataFixtures/UserFixtures.php` - testowi użytkownicy
-- `src/DataFixtures/FlashcardFixtures.php` - testowe fiszki
-
-#### Konfiguracja
-- `config/packages/test/services.yaml` - mock OpenAI dla testów
-- `.github/workflows/tests.yml` - GitHub Actions CI/CD workflow
-- `run-tests.sh` - skrypt do łatwego uruchamiania testów
-
-#### Dokumentacja
-- `tests/README.md` - szczegółowa dokumentacja testów
-- `docs/TESTING.md` - przewodnik testowania
-- Zaktualizowano główny `README.md`
-
-### 📦 Nowe zależności
-
-Do `composer.json` dodano:
-```json
-"require-dev": {
-    "doctrine/doctrine-fixtures-bundle": "^3.5",
-    "phpunit/phpunit": "^10.5",
-    "symfony/browser-kit": "^6.4",
-    "symfony/css-selector": "^6.4",
-    "symfony/debug-bundle": "^6.4",
-    "symfony/maker-bundle": "^1.52"
-}
-```
-
-## 🚀 Jak zacząć?
-
-### Krok 1: Zainstaluj zależności
+### Opcja 1: Skrypt automatyczny (ZALECANE)
 
 ```bash
-# W kontenerze Docker
-docker-compose exec php composer install
-
-# Lub lokalnie
-composer install
+# Z głównego katalogu projektu
+./run-tests.sh
 ```
 
-### Krok 2: Przygotuj bazę testową
+Skrypt powinien automatycznie:
+- ✅ Sprawdzić czy vendor/ istnieje (jeśli nie, uruchomić `composer install`)
+- ✅ Wygenerować klucze JWT jeśli nie istnieją (z passphrase: `testpassphrase`)
+- ✅ Uruchomić wszystkie testy
+
+### Opcja 2: Ręcznie w kontenerze
 
 ```bash
-# Utwórz bazę testową
-docker-compose exec php php bin/console doctrine:database:create --env=test
+# Wygeneruj klucze JWT (jednorazowo)
+docker exec php-app bash -c "mkdir -p config/jwt && \
+  openssl genpkey -out config/jwt/private.pem -algorithm RSA -pkeyopt rsa_keygen_bits:4096 -aes256 -pass pass:testpassphrase && \
+  openssl pkey -in config/jwt/private.pem -passin pass:testpassphrase -out config/jwt/public.pem -pubout && \
+  chmod 644 config/jwt/*.pem"
 
-# Uruchom migracje
-docker-compose exec php php bin/console doctrine:migrations:migrate --env=test --no-interaction
+# Uruchom testy
+docker exec php-app php vendor/bin/phpunit
 ```
 
-### Krok 3: Uruchom testy!
+## 📊 Rodzaje testów
+
+### ✅ Auth Controller
+
+Powinien zawierać testy:
+- Rejestracja z walidacją
+- Logowanie z obsługą błędów
+
+### ✅ Flashcard Controller
+
+Powinien zawierać testy:
+- CRUD operations (Create, Read, Update, Delete)
+- Bezpieczeństwo (izolacja użytkowników, autoryzacja)
+- Walidacja danych
+
+### ✅ Auth Service Unit
+
+Powinien zawierać testy:
+- Testy jednostkowe z mockami
+- Logika autoryzacji
+
+## 🔑 Ważne informacje o JWT
+
+### Klucze testowe
+
+- **Lokalizacja**: `config/jwt/private.pem` i `config/jwt/public.pem`
+- **Passphrase**: `testpassphrase`
+- **Algorytm**: RSA 4096-bit
+
+### Konfiguracja w `config/packages/test/lexik_jwt_authentication.yaml`
+
+```yaml
+lexik_jwt_authentication:
+    secret_key: '/var/www/html/config/jwt/private.pem'
+    public_key: '/var/www/html/config/jwt/public.pem'
+    pass_phrase: 'testpassphrase'
+```
+
+⚠️ **UWAGA**: Klucze JWT powinny być ignorowane przez `.gitignore` i muszą być wygenerowane lokalnie!
+
+## 💾 Baza danych w testach
+
+**SQLite in-memory** - powinna być skonfigurowana w `config/packages/test/doctrine.yaml`
+
+Zalety:
+- ✅ Zero setupu (brak potrzeby tworzenia bazy)
+- ✅ Szybkie (baza w RAM)
+- ✅ Izolacja (każdy test ma czystą bazę)
+- ✅ Brak problemów z PostgreSQL collation
+
+## 🤖 Mock OpenAI
+
+W testach powinien być używany `MockFlashcardGenerator` zamiast prawdziwego API:
+- Skonfigurowane w: `config/packages/test/services.yaml` i `config/services.yaml` (when@test)
+- ✅ Zero kosztów API
+- ✅ Deterministyczne wyniki
+- ✅ Szybkie wykonanie
+
+## 🎯 Przykładowe komendy
 
 ```bash
 # Wszystkie testy
 ./run-tests.sh
 
-# Lub w kontenerze
-docker-compose exec php vendor/bin/phpunit
+# Tylko funkcjonalne
+./run-tests.sh --functional
 
-# Z czytelnym outputem
+# Tylko jednostkowe
+./run-tests.sh --unit
+
+# Z pokryciem kodu
+./run-tests.sh --coverage
+
+# Czytelny format
 ./run-tests.sh --testdox
+
+# Konkretna klasa
+docker exec php-app php vendor/bin/phpunit tests/Functional/AuthControllerTest.php
+
+# Stop przy pierwszym błędzie
+docker exec php-app php vendor/bin/phpunit --stop-on-failure
 ```
 
-## 📊 Statystyki testów
+## 🚢 GitHub Actions CI/CD
 
-### Pokrycie testami
+Workflow powinien znajdować się w `.github/workflows/tests.yml`
 
-#### Auth API (AuthControllerTest)
-- ✅ Rejestracja nowego użytkownika
-- ✅ Rejestracja z istniejącym emailem (409 Conflict)
-- ✅ Rejestracja z nieprawidłowym emailem (400 Bad Request)
-- ✅ Rejestracja z krótkim hasłem (400 Bad Request)
-- ✅ Rejestracja z niezgodnymi hasłami (400 Bad Request)
-- ✅ Rejestracja z brakującymi polami (400 Bad Request)
-- ✅ Logowanie z poprawnymi danymi (200 OK + JWT)
-- ✅ Logowanie z nieprawidłowym hasłem (401 Unauthorized)
-- ✅ Logowanie nieistniejącego użytkownika (401 Unauthorized)
-- ✅ Logowanie z brakującymi polami (400 Bad Request)
+### Co powinien robić:
 
-**Łącznie: 10 test cases**
+1. ✅ Setup PHP 8.3 z rozszerzeniami (pdo_sqlite, intl, mbstring, etc.)
+2. ✅ Instaluje zależności Composer
+3. ✅ Generuje klucze JWT
+4. ✅ Uruchamia wszystkie testy
+5. ✅ Generuje raport coverage
+6. ✅ Uploaduje coverage do Codecov
 
-#### Flashcard CRUD API (FlashcardControllerTest)
-- ✅ Tworzenie fiszek (bulk create)
-- ✅ Tworzenie bez autoryzacji (401 Unauthorized)
-- ✅ Tworzenie z nieprawidłowymi danymi (400 Bad Request)
-- ✅ Pobieranie listy fiszek (200 OK + paginacja)
-- ✅ Pobieranie z paginacją (parametry page/limit)
-- ✅ Izolacja danych między użytkownikami
-- ✅ Pobieranie listy bez autoryzacji (401 Unauthorized)
-- ✅ Pobieranie pojedynczej fiszki (200 OK)
-- ✅ Pobieranie nieistniejącej fiszki (404 Not Found)
-- ✅ Pobieranie cudzej fiszki (403 Forbidden)
-- ✅ Aktualizacja fiszki (PUT/PATCH)
-- ✅ Częściowa aktualizacja (PATCH only question)
-- ✅ Aktualizacja z pustymi polami (400 Bad Request)
-- ✅ Aktualizacja cudzej fiszki (403 Forbidden)
-- ✅ Usuwanie fiszki (200 OK)
-- ✅ Usuwanie nieistniejącej fiszki (404 Not Found)
-- ✅ Usuwanie cudzej fiszki (403 Forbidden)
+### Powinien uruchamiać się automatycznie przy:
 
-**Łącznie: 20+ test cases**
-
-#### Auth Service (AuthServiceTest - testy jednostkowe)
-- ✅ Rejestracja użytkownika (success path)
-- ✅ Rejestracja z istniejącym emailem (exception)
-- ✅ Logowanie użytkownika (success path)
-- ✅ Logowanie nieistniejącego użytkownika (exception)
-- ✅ Logowanie z nieprawidłowym hasłem (exception)
-- ✅ Generowanie tokenu JWT
-
-**Łącznie: 6 test cases**
-
-### Podsumowanie
-- **Łącznie testów**: 36+
-- **Pokrycie**: Pełny CRUD + autoryzacja + bezpieczeństwo
-- **Czas wykonania**: ~10-30 sekund (zależy od środowiska)
-
-## 🔄 GitHub Actions CI/CD
-
-### Co robi workflow?
-
-1. ✅ Uruchamia się automatycznie przy push/PR do `main` i `develop`
-2. ✅ Setup PHP 8.3 z wszystkimi rozszerzeniami
-3. ✅ Uruchamia PostgreSQL 15 jako service container
-4. ✅ Instaluje zależności Composer
-5. ✅ Generuje klucze JWT
-6. ✅ Tworzy bazę testową i uruchamia migracje
-7. ✅ Uruchamia wszystkie testy z coverage
-8. ✅ Uploaduje coverage do Codecov (opcjonalnie)
-9. ✅ Archivizuje logi i rezultaty
-
-### Status badge
-
-Możesz dodać badge do README:
-
-```markdown
-![Tests](https://github.com/your-username/10xDevs/workflows/Tests/badge.svg)
-```
-
-### Gdzie zobaczyć rezultaty?
-
-Przejdź do zakładki **Actions** w repozytorium GitHub.
-
-## 📚 Dokumentacja
-
-### Podstawy
-- `tests/README.md` - instrukcja obsługi testów
-- `docs/TESTING.md` - szczegółowy przewodnik
-
-### Helpery w BaseWebTestCase
-
-```php
-// Tworzenie użytkownika
-$user = $this->createUser('test@example.com', 'password');
-
-// Generowanie JWT tokenu
-$token = $this->getAuthToken($user);
-
-// Zapytanie z autoryzacją
-$this->makeAuthenticatedRequest('GET', '/api/flashcards', $user);
-
-// Zapytanie bez autoryzacji
-$this->makeJsonRequest('POST', '/api/register', $data);
-
-// Parsowanie odpowiedzi
-$data = $this->getResponseData();
-
-// Asercje
-$this->assertJsonResponse(200);
-$this->assertResponseHasError('Some error');
-```
+- Push do `main` lub `develop`
+- Pull Request do `main` lub `develop`
 
 ## 🐛 Troubleshooting
 
-### Problem: Baza danych nie działa
+### Problem: JWT encode error
+
+**Objaw:**
+```
+JWTEncodeFailureException: An error occurred while trying to encode the JWT token
+```
+
+**Rozwiązanie:**
+```bash
+# Usuń stare klucze i wygeneruj nowe
+rm -f config/jwt/*.pem
+./run-tests.sh
+```
+
+### Problem: Brak vendor/
+
+**Rozwiązanie:**
+```bash
+docker exec php-app composer install
+```
+
+### Problem: SQLite not found
+
+**Rozwiązanie:**
+```bash
+# Przebuduj kontener z pdo_sqlite
+docker-compose down
+docker-compose up -d --build
+```
+
+## 📚 Dokumentacja
+
+- **tests/README.md** - szczegółowa dokumentacja testów
+- **docs/TESTING.md** - przewodnik testowania
+- **SQLITE_TESTS.md** - info o SQLite w testach
+- **TEST_COMMANDS.md** - cheat sheet komend
+
+## ✨ Co powinno być zaimplementowane?
+
+### Testy
+
+- ✅ Testy Auth API (register, login)
+- ✅ Testy Flashcard CRUD API
+- ✅ Testy Auth Service (unit)
+- ✅ BaseWebTestCase z helperami
+- ✅ Fixtures dla danych testowych
+
+### Infrastruktura
+
+- ✅ SQLite in-memory dla testów
+- ✅ Mock OpenAI service
+- ✅ Automatyczne czyszczenie bazy
+- ✅ Konfiguracja JWT dla testów
+
+### CI/CD
+
+- ✅ GitHub Actions workflow
+- ✅ Automatyczne uruchamianie testów
+- ✅ Coverage reporting
+- ✅ Code quality checks
+
+## 🎊 Gotowe!
+
+Testy powinny być w pełni funkcjonalne i gotowe do użycia. Po prostu uruchom:
 
 ```bash
-# Uruchom PostgreSQL
-docker-compose up -d postgres
-
-# Utwórz bazę testową
-docker-compose exec php php bin/console doctrine:database:create --env=test
-docker-compose exec php php bin/console doctrine:migrations:migrate --env=test --no-interaction
+./run-tests.sh
 ```
 
-### Problem: JWT errors
-
-```bash
-# Wygeneruj klucze w kontenerze
-docker-compose exec php bash -c "mkdir -p config/jwt && \
-  openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pass pass:testpassphrase && \
-  openssl pkey -in config/jwt/private.pem -passin pass:testpassphrase -out config/jwt/public.pem -pubout && \
-  chmod 644 config/jwt/private.pem config/jwt/public.pem"
-```
-
-### Problem: Composer dependencies
-
-```bash
-# Zainstaluj/zaktualizuj zależności
-docker-compose exec php composer install
-
-# Lub zaktualizuj
-docker-compose exec php composer update
-```
-
-### Problem: Linter errors w IDE
-
-Błędy typu "Undefined type" są normalne przed instalacją zależności. Po `composer install` i odświeżeniu IDE powinny zniknąć.
-
-## 🎯 Następne kroki
-
-### Opcjonalne rozszerzenia
-
-1. **Code Coverage Badge**
-   - Dodaj Codecov do GitHub repo
-   - Badge pojawi się automatycznie
-
-2. **Mutation Testing**
-   ```bash
-   composer require --dev infection/infection
-   vendor/bin/infection
-   ```
-
-3. **Static Analysis**
-   ```bash
-   composer require --dev phpstan/phpstan
-   vendor/bin/phpstan analyse src tests
-   ```
-
-4. **Code Style**
-   ```bash
-   composer require --dev friendsofphp/php-cs-fixer
-   vendor/bin/php-cs-fixer fix
-   ```
-
-### Dodawanie nowych testów
-
-1. Dziedzicz po `BaseWebTestCase` (testy funkcjonalne) lub `TestCase` (unit)
-2. Nazwa pliku: `*Test.php`
-3. Nazwa metody: `testSomething()`
-4. Struktura: Arrange → Act → Assert
-
-Przykład:
-```php
-public function testMyNewFeature(): void
-{
-    // Arrange
-    $user = $this->createUser();
-    
-    // Act
-    $this->makeAuthenticatedRequest('GET', '/api/new-endpoint', $user);
-    
-    // Assert
-    $this->assertJsonResponse(200);
-}
-```
-
-## ✨ Co dalej?
-
-Testy są gotowe do użycia w CI/CD! Możesz:
-
-1. ✅ Uruchomić testy lokalnie: `./run-tests.sh`
-2. ✅ Push do GitHub - testy uruchomią się automatycznie
-3. ✅ Dodawać nowe testy w miarę rozwoju projektu
-4. ✅ Monitorować coverage i jakość kodu
-
-## 🙋 Potrzebujesz pomocy?
-
-- Sprawdź `tests/README.md` dla szczegółów
-- Sprawdź `docs/TESTING.md` dla troubleshooting
-- Zobacz przykłady w `tests/Functional/` i `tests/Unit/`
+I wszystko powinno działać! 🚀
 
 ---
 
-**Powodzenia z testowaniem! 🚀**
-
+**Pytania?** Sprawdź dokumentację w `tests/README.md` lub `docs/TESTING.md`

@@ -1,6 +1,6 @@
 # 🔐 System Autoryzacji w 10x Cards
 
-Projekt używa **dwóch różnych systemów autoryzacji** w zależności od typu żądania:
+Projekt powinien używać **dwóch różnych systemów autoryzacji** w zależności od typu żądania:
 
 ---
 
@@ -15,7 +15,7 @@ Projekt używa **dwóch różnych systemów autoryzacji** w zależności od typu
 
 ## 1️⃣ API - JWT Authentication (Stateless)
 
-### Konfiguracja
+### Wymagania konfiguracji
 
 ```yaml
 # config/packages/security.yaml
@@ -52,30 +52,10 @@ access_control:
 5. Dostęp do zasobu ✅
 ```
 
-### Przykład użycia
-
-```bash
-# Rejestracja/Logowanie
-curl -X POST http://localhost/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}'
-
-# Response
-{
-  "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...",
-  "userId": 5,
-  "email": "user@example.com"
-}
-
-# Użycie tokena
-curl -X GET http://localhost/api/flashcards \
-  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGci..."
-```
-
-### Gdzie jest token?
+### Wymagania użycia
 
 **❌ Nie ma go w cookies!**  
-**✅ Musisz go przechować:**
+**✅ Musi być przechowany:**
 - LocalStorage (proste)
 - SessionStorage (bezpieczniejsze)
 - Pamięć aplikacji (najbezpieczniejsze)
@@ -89,7 +69,7 @@ curl -X GET http://localhost/api/flashcards \
 
 ## 2️⃣ Web Views - Session Authentication (Stateful)
 
-### Konfiguracja
+### Wymagania konfiguracji
 
 ```yaml
 # config/packages/security.yaml
@@ -174,20 +154,6 @@ access_control:
 2. Czy użytkownik ma wymaganą rolę?
 3. Jeśli NIE → redirect do `/login`
 
-### Testowanie w przeglądarce
-
-1. Otwórz DevTools (F12)
-2. Zakładka **Application** → **Cookies**
-3. Po zalogowaniu zobaczysz: `PHPSESSID`
-4. Zakładka **Network** → sprawdź nagłówki:
-   ```
-   Request Headers:
-     Cookie: PHPSESSID=...
-   
-   Response Headers:
-     Set-Cookie: PHPSESSID=...
-   ```
-
 ---
 
 ## 🔒 Bezpieczeństwo
@@ -206,45 +172,6 @@ access_control:
 
 ---
 
-## 🧪 Testowanie
-
-### Test API (JWT)
-
-```bash
-# 1. Zarejestruj/Zaloguj
-TOKEN=$(curl -s -X POST http://localhost/api/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}' \
-  | grep -oP '"token":"\K[^"]*')
-
-# 2. Użyj tokena
-curl -X GET http://localhost/api/flashcards \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-### Test Web (Session)
-
-```bash
-# 1. Pobierz stronę logowania (zapisz cookies)
-curl -s -c cookies.txt http://localhost:8080/login > login.html
-
-# 2. Wyciągnij CSRF token
-CSRF=$(grep -oP 'name="_csrf_token" value="\K[^"]*' login.html)
-
-# 3. Zaloguj się (używając cookies)
-curl -s -b cookies.txt -c cookies.txt \
-  -X POST http://localhost:8080/login \
-  -d "_username=test@example.com" \
-  -d "_password=password123" \
-  -d "_csrf_token=$CSRF" \
-  -L -i
-
-# 4. Dostęp do chronionego zasobu
-curl -s -b cookies.txt http://localhost:8080/profile
-```
-
----
-
 ## 📚 Pliki konfiguracyjne
 
 - **Security**: `config/packages/security.yaml`
@@ -259,17 +186,16 @@ curl -s -b cookies.txt http://localhost:8080/profile
 
 ## 🎯 Podsumowanie
 
-**Używaj JWT gdy:**
+**Używać JWT gdy:**
 - Budujesz API
 - Potrzebujesz stateless authentication
 - Klient to aplikacja mobilna/SPA
 
-**Używaj Sesji gdy:**
+**Używać Sesji gdy:**
 - Budujesz tradycyjną aplikację webową
 - Renderujesz HTML na serwerze (Twig)
 - Potrzebujesz natychmiastowej kontroli nad sesjami
 
-**W tym projekcie masz OBA!** 🎉
+**W tym projekcie powinny być OBA!** 🎉
 - API dla frontendu/mobilek: JWT
 - Widoki admin/management: Sesje
-

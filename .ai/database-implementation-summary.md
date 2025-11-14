@@ -1,14 +1,14 @@
-# Podsumowanie implementacji bazy danych - 10x-cards
+# Wymagania implementacji bazy danych - 10x-cards
 
-## Przeprowadzony proces
+## Proces planowania
 
-Kompleksowy proces planowania i wdrożenia bazy danych:
+Projekt powinien przejść przez kompleksowy proces planowania i wdrożenia bazy danych:
 
-### 1. ✅ Sesja planistyczna bazy danych
+### 1. Sesja planistyczna bazy danych
 
 **Plik:** `.ai/db-planning-session.md`
 
-Przeprowadzona analiza wymagań z PRD i identyfikacja kluczowych encji:
+Należy przeprowadzić analizę wymagań z PRD i zidentyfikować kluczowe encje:
 - User (użytkownicy)
 - Flashcard (fiszki edukacyjne)
 - FlashcardGeneration (historia generowania przez AI)
@@ -21,11 +21,11 @@ Przeprowadzona analiza wymagań z PRD i identyfikacja kluczowych encji:
 - Relacja 1:1 między Flashcard a RepetitionRecord
 - Foreign keys z ON DELETE CASCADE dla integralności danych
 
-### 2. ✅ Definiowanie schematu bazy danych
+### 2. Definiowanie schematu bazy danych
 
 **Plik:** `.ai/db-plan.md`
 
-Stworzony kompleksowy plan schematu zawierający:
+Należy stworzyć kompleksowy plan schematu zawierający:
 - Szczegółowy opis wszystkich 4 tabel
 - Definicje kolumn z typami danych
 - Indeksy dla optymalizacji wydajności
@@ -39,11 +39,11 @@ Stworzony kompleksowy plan schematu zawierający:
 3. `flashcard_generation` - sesje generowania przez AI (source_text, status)
 4. `repetition_record` - metadane dla spaced repetition (ease_factor, interval_days, next_review_at)
 
-### 3. ✅ Wdrożenie poprzez migracje
+### 3. Wdrożenie poprzez migracje
 
 **Plik:** `migrations/Version20251111212844.php`
 
-Wygenerowana migracja Doctrine zawierająca:
+Należy wygenerować migrację Doctrine zawierającą:
 - Tworzenie wszystkich 4 tabel z odpowiednimi kolumnami
 - Indeksy dla optymalizacji zapytań
 - Foreign keys z odpowiednimi akcjami (CASCADE, SET NULL)
@@ -56,11 +56,11 @@ Wygenerowana migracja Doctrine zawierająca:
 - Check constraints dla wartości enum (source, status)
 - Optymalne indeksy na krytycznych kolumnach
 
-### 4. ✅ Konfiguracja projektu
+### 4. Konfiguracja projektu
 
 **Plik:** `composer.json`
 
-Dodane zależności:
+Projekt powinien zawierać zależności:
 - `doctrine/doctrine-bundle` - integracja Doctrine z Symfony
 - `doctrine/orm` - ORM Doctrine
 - `doctrine/doctrine-migrations-bundle` - zarządzanie migracjami
@@ -127,7 +127,7 @@ flashcard (1) ──< (1) repetition_record
 
 ## Wybrane rozwiązania techniczne
 
-Projekt wykorzystuje Symfony/Doctrine zamiast innych rozwiązań BaaS:
+Projekt powinien wykorzystywać Symfony/Doctrine:
 
 1. **Migracje:**
    - Klasy PHP (`VersionYYYYMMDDHHMMSS.php`) zamiast plików SQL
@@ -147,10 +147,9 @@ Projekt wykorzystuje Symfony/Doctrine zamiast innych rozwiązań BaaS:
 
 ## Podsumowanie
 
-Proces planowania i wdrożenia bazy danych został zakończony:
+Proces planowania i wdrożenia bazy danych powinien obejmować:
 1. ✅ Sesja planistyczna - zebranie pytań i rekomendacji
 2. ✅ Definiowanie schematu - szczegółowy plan bazy danych
 3. ✅ Wdrożenie - migracja Doctrine gotowa do uruchomienia
 
-Schemat bazy danych jest gotowy do użycia i zgodny z wymaganiami z PRD oraz najlepszymi praktykami projektowania baz danych PostgreSQL.
-
+Schemat bazy danych powinien być gotowy do użycia i zgodny z wymaganiami z PRD oraz najlepszymi praktykami projektowania baz danych PostgreSQL.

@@ -2,7 +2,7 @@
 
 ## ✅ ZERO KONFIGURACJI POTRZEBNE!
 
-Workflow GitHub Actions działa **automatycznie** po `git push`!
+Workflow GitHub Actions powinien działać **automatycznie** po `git push`!
 
 ```bash
 git add .
@@ -14,16 +14,16 @@ git push origin main
 
 ---
 
-## 📊 Co się dzieje automatycznie?
+## 📊 Co powinno się dziać automatycznie?
 
 Po każdym push do `main` lub `develop`:
 
-1. ✅ GitHub uruchamia workflow
-2. ✅ Instaluje PHP 8.3 + dependencies
-3. ✅ Generuje klucze JWT
-4. ✅ Uruchamia **34 testy** (11 Auth + 17 Flashcard + 6 Unit)
-5. ✅ Sprawdza jakość kodu
-6. ✅ Generuje coverage report
+1. ✅ GitHub powinien uruchomić workflow
+2. ✅ Zainstalować PHP 8.3 + dependencies
+3. ✅ Wygenerować klucze JWT
+4. ✅ Uruchomić wszystkie testy
+5. ✅ Sprawdzić jakość kodu
+6. ✅ Wygenerować coverage report
 
 **Czas:** ~2-3 minuty
 
@@ -34,13 +34,15 @@ Po każdym push do `main` lub `develop`:
 ## 🔍 Gdzie zobaczyć wyniki?
 
 ### GitHub UI
+
 1. Idź do repo na GitHub
 2. Kliknij zakładkę **Actions**
 3. Zobacz najnowszy workflow run
 4. Kliknij żeby zobaczyć szczegółowe logi
 
 ### Pull Requests
-Status testów pojawi się automatycznie na każdym PR! ✨
+
+Status testów powinien pojawić się automatycznie na każdym PR! ✨
 
 ---
 
@@ -55,7 +57,7 @@ Jeśli chcesz piękne raporty coverage na Codecov:
    - GitHub → Settings → Secrets and variables → Actions
    - New secret: `CODECOV_TOKEN` = (token z Codecov)
 
-**Gotowe!** Przy następnym push coverage uploaduje się automatycznie.
+**Gotowe!** Przy następnym push coverage powinien uploadować się automatycznie.
 
 ---
 
@@ -102,5 +104,4 @@ git push  # To wszystko!
 - ❌ Instalować niczego na serwerze
 - ❌ Ustawiać secrets (oprócz Codecov jeśli chcesz)
 
-**Workflow jest gotowy! Zrób push i zobacz magię! ✨**
-
+**Workflow powinien być gotowy! Zrób push i zobacz magię! ✨**
