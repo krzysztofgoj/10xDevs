@@ -60,6 +60,10 @@ RUN mkdir -p var/cache var/log && \
 # Set Apache environment variable for DocumentRoot
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 
+# Set default Symfony environment to production
+ENV APP_ENV=prod
+ENV APP_DEBUG=0
+
 EXPOSE 80
 
 # Run a script to fix permissions on startup (since volumes override them)
