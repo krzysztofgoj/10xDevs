@@ -72,10 +72,13 @@ final class AuthController extends AbstractController
                 }
             }
             
+            $params = $connection->getParams();
+            $databaseUrl = $params['url'] ?? $params['dbname'] ?? 'not set';
+            
             return new JsonResponse([
                 'status' => 'ok',
                 'columns' => $result,
-                'database_url' => $_ENV['DATABASE_URL'] ?? 'not set',
+                'database_url' => $databaseUrl,
                 'tests' => $testResult
             ]);
         } catch (\Exception $e) {
