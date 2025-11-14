@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
@@ -19,7 +20,8 @@ final class ApiExceptionListener
 {
     public function __construct(
         private readonly SerializerInterface $serializer,
-        private readonly TokenStorageInterface $tokenStorage
+        private readonly TokenStorageInterface $tokenStorage,
+        private readonly KernelInterface $kernel
     ) {
     }
 
@@ -83,7 +85,7 @@ final class ApiExceptionListener
         } else {
             // W środowisku dev, dodaj szczegóły błędu
             $details = null;
-            if ($_ENV['APP_ENV'] ?? 'prod' === 'dev') {
+            if ($this->kernel->getEnvironment() === 'dev') {
                 $details = [
                     'exception' => get_class($exception),
                     'message' => $exception->getMessage(),
