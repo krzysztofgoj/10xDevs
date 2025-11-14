@@ -2,7 +2,7 @@
 
 ## Analiza wymagań z PRD
 
-Na podstawie analizy PRD i User Stories, identyfikuję następujące główne encje:
+Na podstawie analizy PRD i User Stories, należy zidentyfikować następujące główne encje:
 
 1. **User** - użytkownicy systemu
 2. **Flashcard** - fiszki edukacyjne
@@ -147,4 +147,3 @@ Na podstawie analizy PRD i User Stories, identyfikuję następujące główne en
 - User 1:N FlashcardGeneration
 - FlashcardGeneration 1:N Flashcard (opcjonalna)
 - Flashcard 1:1 RepetitionRecord
-

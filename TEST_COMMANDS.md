@@ -94,9 +94,6 @@ docker-compose logs php
 
 # Restart kontenera
 docker-compose restart php
-
-# Sprawdź czy PostgreSQL działa
-docker-compose exec postgres psql -U testuser -d testdb_test -c "SELECT 1"
 ```
 
 ## 📦 Composer
@@ -247,4 +244,3 @@ alias test-watch='watch -n 2 vendor/bin/phpunit'
 - Przewodnik testowania: `docs/TESTING.md`
 - Setup guide: `TESTS_SETUP.md`
 - PHPUnit docs: https://phpunit.de/documentation.html
-

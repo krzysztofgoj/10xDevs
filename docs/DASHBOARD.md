@@ -2,15 +2,15 @@
 
 ## 📱 Przegląd funkcjonalności
 
-Nowy dashboard jest nowoczesnym, przyjaznym dla użytkownika interfejsem, który służy jako główny punkt kontrolny aplikacji 10x Cards.
+Dashboard powinien być nowoczesnym, przyjaznym dla użytkownika interfejsem, który służy jako główny punkt kontrolny aplikacji 10x Cards.
 
 ## 🎨 Design & UI/UX
 
 ### Główne elementy:
 
 1. **Powitanie użytkownika**
-   - Wyświetla spersonalizowane powitanie z imieniem użytkownika (pierwsza część emaila)
-   - Zachęcająca wiadomość motywacyjna
+   - Powinno wyświetlać spersonalizowane powitanie z imieniem użytkownika (pierwsza część emaila)
+   - Powinna być zachęcająca wiadomość motywacyjna
 
 2. **Duże karty akcji** (Main Action Cards)
    - **Rozpocznij naukę** - Prowadzi do wyboru trybu nauki
@@ -57,13 +57,13 @@ Nowy dashboard jest nowoczesnym, przyjaznym dla użytkownika interfejsem, który
    - Szybkie akcje jako uzupełnienie
 
 2. **Feedback wizualny**
-   - Wszystkie interaktywne elementy mają animacje hover
+   - Wszystkie interaktywne elementy powinny mieć animacje hover
    - Wyraźne wskazówki co jest klikalne
    - Disabled state dla niedostępnych akcji
 
 3. **Responsywność**
-   - Layout dostosowuje się do rozmiaru ekranu
-   - Karty układają się w kolumny na mniejszych ekranach
+   - Layout powinien dostosowywać się do rozmiaru ekranu
+   - Karty powinny układać się w kolumny na mniejszych ekranach
 
 4. **Dostępność**
    - Wyraźne ikony z tekstem
@@ -96,7 +96,7 @@ Nowy dashboard jest nowoczesnym, przyjaznym dla użytkownika interfejsem, który
 - **Layout**: `templates/base.html.twig`
 - **Security config**: `config/packages/security.yaml`
 
-## 💡 Najlepsze praktyki zastosowane
+## 💡 Najlepsze praktyki do zastosowania
 
 1. ✅ **Progressive disclosure** - Pokazywanie informacji gdy są potrzebne
 2. ✅ **Visual hierarchy** - Ważniejsze elementy są większe i bardziej widoczne
@@ -115,4 +115,3 @@ Możliwe przyszłe rozszerzenia:
 - Streak counter (dni nauki z rzędu)
 - Rekomendacje co warto powtórzyć
 - Cele i achievements
-

@@ -1,6 +1,6 @@
-# Testy projektu 10xDevs
+# Wymagania dotyczące testów projektu 10xDevs
 
-Ten folder zawiera testy automatyczne dla projektu 10xDevs - aplikacji do nauki z użyciem fiszek.
+Ten folder powinien zawierać testy automatyczne dla projektu 10xDevs - aplikacji do nauki z użyciem fiszek.
 
 ## Struktura testów
 
@@ -18,9 +18,9 @@ tests/
 ## Wymagania
 
 - PHP 8.3+
-- PostgreSQL 15+
+- PostgreSQL 15+ (lub SQLite dla testów)
 - Composer
-- Zainstalowane rozszerzenia PHP: pdo_pgsql, mbstring, intl, xml, zip
+- Zainstalowane rozszerzenia PHP: pdo_pgsql (lub pdo_sqlite), mbstring, intl, xml, zip
 
 ## Instalacja zależności testowych
 
@@ -28,7 +28,7 @@ tests/
 composer install
 ```
 
-Zainstalowane zostaną pakiety:
+Zainstalowane powinny być pakiety:
 - `phpunit/phpunit` - framework do testów
 - `symfony/browser-kit` - do symulacji żądań HTTP
 - `symfony/css-selector` - do parsowania HTML w testach
@@ -38,13 +38,13 @@ Zainstalowane zostaną pakiety:
 
 ### 1. Baza danych
 
-Testy używają osobnej bazy danych `testdb_test`. Upewnij się, że masz dostęp do PostgreSQL:
+Testy powinny używać osobnej bazy danych `testdb_test` lub SQLite in-memory. Upewnij się, że masz dostęp do bazy danych:
 
 ```bash
 # W dockerze (jeśli używasz docker-compose)
 docker-compose up -d postgres
 
-# Stwórz bazę testową
+# Stwórz bazę testową (jeśli używasz PostgreSQL)
 php bin/console doctrine:database:create --env=test
 php bin/console doctrine:migrations:migrate --env=test --no-interaction
 ```
@@ -130,39 +130,45 @@ Raport HTML będzie w katalogu `coverage/`.
 
 ### Testy funkcjonalne (Functional/)
 
-Testują pełny przepływ żądań HTTP przez API:
+Powinny testować pełny przepływ żądań HTTP przez API:
 
 #### AuthControllerTest
-- ✅ Rejestracja nowego użytkownika
-- ✅ Rejestracja z istniejącym emailem (konflikt)
-- ✅ Rejestracja z nieprawidłowymi danymi
-- ✅ Logowanie z poprawnymi danymi
-- ✅ Logowanie z nieprawidłowym hasłem
-- ✅ Logowanie nieistniejącego użytkownika
+
+Powinien zawierać testy:
+- Rejestracja nowego użytkownika
+- Rejestracja z istniejącym emailem (konflikt)
+- Rejestracja z nieprawidłowymi danymi
+- Logowanie z poprawnymi danymi
+- Logowanie z nieprawidłowym hasłem
+- Logowanie nieistniejącego użytkownika
 
 #### FlashcardControllerTest
-- ✅ Tworzenie fiszek (bulk create)
-- ✅ Pobieranie listy fiszek
-- ✅ Pobieranie pojedynczej fiszki
-- ✅ Aktualizacja fiszki (PUT/PATCH)
-- ✅ Usuwanie fiszki
-- ✅ Testy bezpieczeństwa (izolacja użytkowników)
-- ✅ Testy autoryzacji (wymagane JWT)
+
+Powinien zawierać testy:
+- Tworzenie fiszek (bulk create)
+- Pobieranie listy fiszek
+- Pobieranie pojedynczej fiszki
+- Aktualizacja fiszki (PUT/PATCH)
+- Usuwanie fiszki
+- Testy bezpieczeństwa (izolacja użytkowników)
+- Testy autoryzacji (wymagane JWT)
 
 ### Testy jednostkowe (Unit/)
 
-Testują poszczególne klasy w izolacji z mockami:
+Powinny testować poszczególne klasy w izolacji z mockami:
 
 #### AuthServiceTest
-- ✅ Rejestracja użytkownika
-- ✅ Rejestracja z istniejącym emailem
-- ✅ Logowanie użytkownika
-- ✅ Logowanie z nieprawidłowymi danymi
-- ✅ Generowanie tokenu JWT
+
+Powinien zawierać testy:
+- Rejestracja użytkownika
+- Rejestracja z istniejącym emailem
+- Logowanie użytkownika
+- Logowanie z nieprawidłowymi danymi
+- Generowanie tokenu JWT
 
 ## Fixtures (dane testowe)
 
-Projekt zawiera fixtures w `src/DataFixtures/`:
+Projekt powinien zawierać fixtures w `src/DataFixtures/`:
 
 - `UserFixtures` - tworzy testowych użytkowników
 - `FlashcardFixtures` - tworzy testowe fiszki
@@ -173,29 +179,29 @@ Można je załadować ręcznie:
 php bin/console doctrine:fixtures:load --env=test
 ```
 
-**Uwaga:** Testy funkcjonalne automatycznie czyszczą bazę przed każdym testem, więc fixtures nie są potrzebne w testach.
+**Uwaga:** Testy funkcjonalne powinny automatycznie czyścić bazę przed każdym testem, więc fixtures nie są potrzebne w testach.
 
 ## Konfiguracja dla środowiska testowego
 
 ### config/packages/test/services.yaml
 
-W środowisku testowym używamy `MockFlashcardGenerator` zamiast prawdziwego API OpenAI, żeby:
+W środowisku testowym powinien być używany `MockFlashcardGenerator` zamiast prawdziwego API OpenAI, żeby:
 - Nie generować kosztów API
 - Testy były szybkie i deterministyczne
 - Nie wymagać prawdziwego klucza API
 
 ## CI/CD - GitHub Actions
 
-Projekt zawiera workflow `.github/workflows/tests.yml`, który automatycznie:
+Projekt powinien zawierać workflow `.github/workflows/tests.yml`, który automatycznie:
 
 1. ✅ Uruchamia testy na PHP 8.3
-2. ✅ Używa PostgreSQL 15 jako bazy danych
+2. ✅ Używa SQLite in-memory jako bazy danych
 3. ✅ Generuje klucze JWT
 4. ✅ Uruchamia wszystkie testy
 5. ✅ Generuje raport coverage
 6. ✅ Sprawdza jakość kodu
 
-Workflow uruchamia się automatycznie przy:
+Workflow powinien uruchamiać się automatycznie przy:
 - Push na branch `main` lub `develop`
 - Pull Request do `main` lub `develop`
 
@@ -203,7 +209,7 @@ Workflow uruchamia się automatycznie przy:
 
 ### Logowanie w testach
 
-Logi testów są zapisywane w `var/log/test.log`.
+Logi testów powinny być zapisywane w `var/log/test.log`.
 
 ### Verbose output
 
@@ -224,20 +230,11 @@ vendor/bin/phpunit --stop-on-failure
 vendor/bin/phpunit --testdox
 ```
 
-Przykładowy output:
-```
-AuthController (App\Tests\Functional\AuthController)
- ✔ Register success
- ✔ Register with existing email
- ✔ Login success
- ✔ Login with invalid password
-```
-
 ## Problemy i rozwiązania
 
 ### Problem: Baza danych nie jest czyszczona między testami
 
-**Rozwiązanie:** `BaseWebTestCase` automatycznie czyści bazę w metodzie `setUp()`. Upewnij się, że Twoja klasa testowa dziedziczy po `BaseWebTestCase`.
+**Rozwiązanie:** `BaseWebTestCase` powinien automatycznie czyścić bazę w metodzie `setUp()`. Upewnij się, że Twoja klasa testowa dziedziczy po `BaseWebTestCase`.
 
 ### Problem: JWT token jest nieprawidłowy
 
@@ -252,6 +249,7 @@ AuthController (App\Tests\Functional\AuthController)
 1. Upewnij się, że PostgreSQL działa: `docker-compose ps`
 2. Sprawdź `DATABASE_URL` w zmiennych środowiskowych
 3. Dla dockera użyj `postgres` jako hosta, dla lokalnego `localhost`
+4. Rozważ użycie SQLite in-memory dla testów
 
 ### Problem: Class not found
 
@@ -311,4 +309,3 @@ final class MyNewFeatureTest extends BaseWebTestCase
 ## Kontakt
 
 Jeśli masz pytania lub problemy z testami, otwórz issue na GitHubie.
-

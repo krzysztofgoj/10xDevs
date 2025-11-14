@@ -1,11 +1,11 @@
 # Testing Guide
 
-Przewodnik po testach w projekcie 10xDevs.
+Przewodnik po wymaganiach dotyczących testów w projekcie 10xDevs.
 
 ## Spis treści
 
 1. [Przegląd](#przegląd)
-2. [Uruchamianie lokalnie](#uruchamianie-lokalnie)
+2. [Wymagania testów](#wymagania-testów)
 3. [CI/CD - GitHub Actions](#cicd---github-actions)
 4. [Pisanie testów](#pisanie-testów)
 5. [Best Practices](#best-practices)
@@ -13,77 +13,62 @@ Przewodnik po testach w projekcie 10xDevs.
 
 ## Przegląd
 
-Projekt zawiera kompleksową suite testów:
+Projekt powinien zawierać kompleksową suite testów.
 
-### Statystyki testów
-- **Testy funkcjonalne**: ~30 test cases
-  - AuthControllerTest: 10 test cases
-  - FlashcardControllerTest: 20 test cases
-- **Testy jednostkowe**: ~6 test cases
-  - AuthServiceTest: 6 test cases
-- **Łączny coverage**: ~85% (docelowo)
+### Wymagania dotyczące testów
+
+- **Testy funkcjonalne**: Powinny testować pełny przepływ HTTP przez API
+- **Testy jednostkowe**: Powinny testować poszczególne klasy w izolacji
+- **Łączny coverage**: Powinien wynosić > 80%
 
 ### Technologie
+
 - PHPUnit 10.5
 - Symfony WebTestCase
 - Doctrine Fixtures
 - Mock Objects
 
-## Uruchamianie lokalnie
+## Wymagania testów
 
 ### 1. Przygotowanie środowiska
 
-```bash
-# Zainstaluj zależności
-composer install
+Projekt powinien wymagać:
+- Zainstalowanych zależności Composer
+- Wygenerowanych kluczy JWT
+- Utworzonej bazy testowej
+- Uruchomionych migracji
 
-# Wygeneruj klucze JWT (jeśli nie istnieją)
-mkdir -p config/jwt
-openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pkeyopt rsa_keygen_bits:4096 -pass pass:testpassphrase
-openssl pkey -in config/jwt/private.pem -passin pass:testpassphrase -out config/jwt/public.pem -pubout
+### 2. Uruchamianie testów
 
-# Utwórz bazę testową
-php bin/console doctrine:database:create --env=test
-php bin/console doctrine:migrations:migrate --env=test --no-interaction
-```
+Projekt powinien zawierać skrypt `run-tests.sh` który:
+- Sprawdza czy vendor/ istnieje
+- Generuje klucze JWT jeśli nie istnieją
+- Uruchamia wszystkie testy
 
-### 2. Uruchom testy
+### Rodzaje testów
 
-```bash
-# Wszystkie testy
-./run-tests.sh
+#### 1. Testy funkcjonalne (Functional/)
+Powinny testować pełny przepływ HTTP przez API:
+- **AuthControllerTest** - rejestracja, logowanie, autoryzacja JWT
+- **FlashcardControllerTest** - pełny CRUD fiszek, bezpieczeństwo, izolacja użytkowników
 
-# W kontenerze Docker
-docker-compose exec php vendor/bin/phpunit
-
-# Konkretna grupa testów
-./run-tests.sh --functional
-./run-tests.sh --unit
-```
-
-### 3. Analiza wyników
-
-```bash
-# Z pokryciem kodu
-./run-tests.sh --coverage
-
-# Format testdox (czytelny)
-./run-tests.sh --testdox
-```
+#### 2. Testy jednostkowe (Unit/)
+Powinny testować poszczególne klasy w izolacji:
+- **AuthServiceTest** - logika autoryzacji z mockami
 
 ## CI/CD - GitHub Actions
 
-### Konfiguracja
+### Wymagania konfiguracji
 
-Workflow znajduje się w `.github/workflows/tests.yml`.
+Workflow powinien znajdować się w `.github/workflows/tests.yml`.
 
-#### Workflow uruchamia się przy:
+#### Workflow powinien uruchamiać się przy:
 - Push do `main` lub `develop`
 - Pull Request do `main` lub `develop`
 
-#### Co robi workflow:
+#### Co powinien robić workflow:
 1. ✅ Setup PHP 8.3 z rozszerzeniami
-2. ✅ Uruchamia PostgreSQL 15 jako service
+2. ✅ Uruchamia PostgreSQL 15 jako service (lub SQLite in-memory)
 3. ✅ Instaluje zależności Composer
 4. ✅ Generuje klucze JWT
 5. ✅ Tworzy bazę testową i uruchamia migracje
@@ -93,7 +78,7 @@ Workflow znajduje się w `.github/workflows/tests.yml`.
 
 ### Zmienne środowiskowe w CI
 
-Workflow automatycznie ustawia:
+Workflow powinien automatycznie ustawiać:
 ```yaml
 APP_ENV=test
 DATABASE_URL=postgresql://testuser:testpass@localhost:5432/testdb_test
@@ -103,46 +88,16 @@ OPENAI_API_KEY=sk-test-mock-key
 
 ### Secrets w GitHub
 
-Nie są potrzebne żadne secrets dla testów, ponieważ:
-- Baza danych jest tymczasowa (service container)
+Nie powinny być potrzebne żadne secrets dla testów, ponieważ:
+- Baza danych jest tymczasowa (service container lub SQLite)
 - JWT używa testowych kluczy generowanych on-the-fly
 - OpenAI używa mock service
-
-### Monitoring CI/CD
-
-1. Przejdź do zakładki **Actions** w repozytorium GitHub
-2. Zobacz status workflow dla każdego commita/PR
-3. Kliknij w konkretny run, żeby zobaczyć szczegóły
-4. Coverage jest dostępny w Codecov (jeśli skonfigurowany)
-
-### Debugging niepowodzeń CI
-
-Jeśli testy failują w CI:
-
-1. **Sprawdź logi**
-   - Kliknij w failed workflow
-   - Sprawdź "Run PHPUnit tests" step
-   - Pobierz artifacts (test-results)
-
-2. **Odtwórz lokalnie**
-   ```bash
-   # Użyj tych samych zmiennych co CI
-   export APP_ENV=test
-   export DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb_test"
-   ./run-tests.sh
-   ```
-
-3. **Najczęstsze problemy**
-   - Brak migracji bazy danych
-   - Nieprawidłowe zmienne środowiskowe
-   - Timeout PostgreSQL service
-   - Błędy w kodzie (syntax errors)
 
 ## Pisanie testów
 
 ### Testy funkcjonalne
 
-Użyj `BaseWebTestCase` jako klasy bazowej:
+Powinny używać `BaseWebTestCase` jako klasy bazowej:
 
 ```php
 <?php
@@ -168,7 +123,7 @@ final class MyFeatureTest extends BaseWebTestCase
 
 ### Testy jednostkowe
 
-Użyj PHPUnit TestCase i mockuj zależności:
+Powinny używać PHPUnit TestCase i mockować zależności:
 
 ```php
 <?php
@@ -197,6 +152,7 @@ final class MyServiceTest extends TestCase
 
 ### Helpery w BaseWebTestCase
 
+Powinny zawierać:
 - `createUser($email, $password, $roles)` - tworzy testowego użytkownika
 - `getAuthToken($user)` - generuje JWT token
 - `makeAuthenticatedRequest($method, $uri, $user, $data)` - żądanie z JWT
@@ -249,11 +205,11 @@ public function testFlashcardCRUD(): void {
 ### 4. Niezależność testów
 
 Każdy test powinien być niezależny:
-- `BaseWebTestCase` automatycznie czyści bazę w `setUp()`
-- Nie polegaj na kolejności wykonania testów
-- Nie używaj globalnego stanu
+- `BaseWebTestCase` powinien automatycznie czyścić bazę w `setUp()`
+- Nie polegać na kolejności wykonania testów
+- Nie używać globalnego stanu
 
-### 5. Używaj fixtures tylko gdy potrzeba
+### 5. Używać fixtures tylko gdy potrzeba
 
 ```php
 // ✅ Dobrze - twórz dane w teście
@@ -263,7 +219,7 @@ $user = $this->createUser();
 $this->loadFixtures([UserFixtures::class]);
 ```
 
-### 6. Mockuj zewnętrzne serwisy
+### 6. Mockować zewnętrzne serwisy
 
 ```php
 // ✅ Dobrze - mock w środowisku testowym
@@ -285,16 +241,9 @@ Connection refused [tcp://localhost:5432]
 ```
 
 **Rozwiązanie:**
-```bash
-# Sprawdź czy PostgreSQL działa
-docker-compose ps postgres
-
-# Uruchom jeśli nie działa
-docker-compose up -d postgres
-
-# Utwórz bazę testową
-php bin/console doctrine:database:create --env=test
-```
+- Sprawdź czy PostgreSQL działa
+- Uruchom jeśli nie działa
+- Utwórz bazę testową
 
 ### Problem: JWT token errors
 
@@ -304,32 +253,8 @@ Unable to load key from "config/jwt/private.pem"
 ```
 
 **Rozwiązanie:**
-```bash
-# Wygeneruj klucze
-mkdir -p config/jwt
-openssl genpkey -out config/jwt/private.pem -aes256 -algorithm rsa -pass pass:testpassphrase
-openssl pkey -in config/jwt/private.pem -passin pass:testpassphrase -out config/jwt/public.pem -pubout
-chmod 644 config/jwt/private.pem config/jwt/public.pem
-
-# Upewnij się że JWT_PASSPHRASE jest ustawione
-export JWT_PASSPHRASE=testpassphrase
-```
-
-### Problem: Fixtures nie ładują się
-
-**Objawy:**
-```
-Class "App\DataFixtures\UserFixtures" not found
-```
-
-**Rozwiązanie:**
-```bash
-# Zainstaluj doctrine-fixtures-bundle
-composer require --dev doctrine/doctrine-fixtures-bundle
-
-# Lub przebuduj autoload
-composer dump-autoload
-```
+- Wygeneruj klucze
+- Upewnij się że JWT_PASSPHRASE jest ustawione
 
 ### Problem: Testy passują lokalnie ale failują w CI
 
@@ -340,33 +265,9 @@ composer dump-autoload
 4. Race conditions
 
 **Rozwiązanie:**
-```bash
-# Uruchom z tymi samymi zmiennymi co CI
-export APP_ENV=test
-export DATABASE_URL="postgresql://testuser:testpass@localhost:5432/testdb_test"
-
-# Sprawdź migracje
-php bin/console doctrine:migrations:status --env=test
-
-# Uruchom testy verbose
-vendor/bin/phpunit --verbose --debug
-```
-
-### Problem: Testy są wolne
-
-**Przyczyny:**
-- Zbyt dużo czyszczenia bazy
-- Zbyt wiele zapytań SQL
-- Brak indeksów w bazie
-
-**Rozwiązanie:**
-```bash
-# Użyj SQLite in-memory dla szybszych testów (opcjonalnie)
-# lub optymalizuj zapytania SQL
-
-# Uruchom tylko zmienione testy
-vendor/bin/phpunit --filter MyChangedTest
-```
+- Uruchom z tymi samymi zmiennymi co CI
+- Sprawdź migracje
+- Uruchom testy verbose
 
 ## Metryki jakości
 
@@ -377,27 +278,9 @@ vendor/bin/phpunit --filter MyChangedTest
 - **Flaky tests**: 0%
 - **Test to code ratio**: 1:1 (linie testów : linie kodu)
 
-### Monitoring
-
-```bash
-# Coverage
-./run-tests.sh --coverage
-
-# Czas wykonania
-vendor/bin/phpunit --log-junit junit.xml
-```
-
 ## Zasoby
 
 - [PHPUnit Documentation](https://phpunit.de/documentation.html)
 - [Symfony Testing](https://symfony.com/doc/current/testing.html)
 - [Doctrine Fixtures](https://symfony.com/bundles/DoctrineFixturesBundle/current/index.html)
 - [GitHub Actions for PHP](https://github.com/shivammathur/setup-php)
-
-## Kontakt
-
-W razie problemów:
-1. Sprawdź [tests/README.md](../tests/README.md)
-2. Otwórz issue na GitHubie
-3. Sprawdź logi w `var/log/test.log`
-

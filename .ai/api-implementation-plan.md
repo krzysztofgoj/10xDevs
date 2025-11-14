@@ -2,7 +2,7 @@
 
 ## Decyzje architektoniczne
 
-Na podstawie odpowiedzi użytkownika:
+Projekt powinien używać:
 - ✅ **Kontrolery**: Zwykłe kontrolery Symfony z atrybutami `#[Route]`
 - ✅ **Serializacja**: Symfony Serializer Component
 - ✅ **Autoryzacja**: JWT tokens (lexik/jwt-authentication-bundle)
@@ -70,7 +70,7 @@ src/
 - `POST /api/generations` - Rozpoczęcie generowania fiszek z tekstu
 - `GET /api/generations/{id}` - Status generowania
 
-## Workflow 3x3 - Pierwsze 3 kroki
+## Workflow implementacji
 
 ### Krok 1: Dodanie zależności i konfiguracja podstawowa
 - [ ] Dodać `lexik/jwt-authentication-bundle` do composer.json
@@ -91,7 +91,7 @@ src/
 - [ ] Utworzyć encję `RepetitionRecord`
 - [ ] Utworzyć repozytoria dla wszystkich encji
 
-## Następne 3 kroki (po feedbacku)
+## Następne kroki
 
 ### Krok 4: Endpointy autoryzacji
 - [ ] Utworzyć `LoginRequest` i `RegisterRequest` DTOs
@@ -148,7 +148,7 @@ security:
 
 ### Request DTOs z walidacją
 
-Wszystkie Request DTOs będą używać atrybutów Symfony Validator:
+Wszystkie Request DTOs powinny używać atrybutów Symfony Validator:
 - `#[Assert\NotBlank]`
 - `#[Assert\Length]`
 - `#[Assert\Email]`
@@ -156,7 +156,7 @@ Wszystkie Request DTOs będą używać atrybutów Symfony Validator:
 
 ### Response DTOs z serializacją
 
-Wszystkie Response DTOs będą używać grup serializacji:
+Wszystkie Response DTOs powinny używać grup serializacji:
 - `#[Groups(['api'])]` dla pól do serializacji
 - Symfony Serializer do konwersji na JSON
 
@@ -174,8 +174,7 @@ Wszystkie Response DTOs będą używać grup serializacji:
 
 ## Dokumentacja
 
-Po implementacji utworzymy:
+Po implementacji należy utworzyć:
 - `docs/API.md` - Dokumentacja wszystkich endpointów
 - Przykłady curl dla każdego endpointa
 - Opis formatów request/response
-

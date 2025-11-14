@@ -60,156 +60,73 @@ Platforma do tworzenia i nauki z wykorzystaniem fiszek edukacyjnych. System wyko
 └── composer.json
 ```
 
-## 🚀 Instalacja i uruchomienie
+## 🚀 Wymagania instalacji i konfiguracji
 
 ### Wymagania wstępne
 
+Aplikacja wymaga:
 - Docker i Docker Compose
 - Git
 
-### Kroki instalacji
+### Wymagania konfiguracji
 
-1. **Sklonuj repozytorium:**
-   ```bash
-   git clone <repository-url>
-   cd 10xDevs
-   ```
-
-2. **Skonfiguruj zmienne środowiskowe:**
+1. **Zmienne środowiskowe:**
    
-   Utwórz plik `.env` w katalogu głównym projektu (jeśli nie istnieje) i ustaw odpowiednie wartości:
-   ```env
-   DATABASE_URL=postgresql://testuser:testpass@postgres:5432/testdb
-   APP_ENV=dev
-   APP_SECRET=your-secret-key-here
-   ```
+   Projekt powinien używać pliku `.env` w katalogu głównym z następującymi zmiennymi:
+   - `DATABASE_URL` - connection string do bazy danych PostgreSQL
+   - `APP_ENV` - środowisko aplikacji (dev/prod/test)
+   - `APP_SECRET` - sekretny klucz aplikacji
 
-3. **Zbuduj i uruchom kontenery:**
-   ```bash
-   docker-compose up -d --build
-   ```
-
-4. **Zainstaluj zależności Composer:**
-   ```bash
-   docker-compose exec php composer install
-   ```
-
-5. **Wygeneruj klucze JWT:**
-   ```bash
-   # Utwórz katalog dla kluczy JWT
-   mkdir -p config/jwt
+2. **Konteneryzacja:**
    
-   # Wygeneruj klucz prywatny (użyj passphrase z pliku .env)
-   openssl genpkey -algorithm RSA -out config/jwt/private.pem -aes256 -pass pass:9f094eace947ed0eb1ca2dbfc37deaa1a578bb957d7a52d2db53b0274981fd67 -pkeyopt rsa_keygen_bits:4096
+   Aplikacja powinna być konteneryzowana przy użyciu Docker i Docker Compose.
+
+3. **Zależności:**
    
-   # Wygeneruj klucz publiczny z klucza prywatnego
-   openssl pkey -in config/jwt/private.pem -out config/jwt/public.pem -pubout -passin pass:9f094eace947ed0eb1ca2dbfc37deaa1a578bb957d7a52d2db53b0274981fd67
-   ```
+   Projekt powinien używać Composer do zarządzania zależnościami PHP.
+
+4. **Klucze JWT:**
    
-   ⚠️ **Uwaga**: W środowisku produkcyjnym użyj bezpiecznego, losowego passphrase i przechowuj go w zmiennych środowiskowych!
+   Projekt powinien wymagać wygenerowania kluczy JWT (RSA 4096-bit) przed uruchomieniem.
+   W środowisku produkcyjnym należy użyć bezpiecznego, losowego passphrase i przechowywać go w zmiennych środowiskowych.
 
-6. **Uruchom migracje bazy danych:**
-   ```bash
-   docker-compose exec php php bin/console doctrine:migrations:migrate
-   ```
+5. **Migracje bazy danych:**
+   
+   Projekt powinien używać Doctrine Migrations do zarządzania schematem bazy danych.
 
-7. **Aplikacja będzie dostępna pod adresem:**
-   ```
-   http://localhost:8080
-   ```
-
-### Porty
-
-- **Aplikacja**: `http://localhost:8080` (mapowany na port 80 w kontenerze)
-- **PostgreSQL**: `localhost:5433` (mapowany na port 5432 w kontenerze)
+6. **Porty:**
+   
+   Aplikacja powinna być dostępna na porcie 8080 (mapowanym na port 80 w kontenerze).
+   PostgreSQL powinien być dostępny na porcie 5433 (mapowanym na port 5432 w kontenerze).
 
 ## 🧪 Testy
 
-Projekt zawiera kompleksową suite testów automatycznych (funkcjonalnych i jednostkowych) gotowych do użycia w CI/CD.
+Projekt powinien zawierać kompleksową suite testów automatycznych (funkcjonalnych i jednostkowych) gotowych do użycia w CI/CD.
 
-### Szybki start
-
-```bash
-# Uruchom wszystkie testy
-./run-tests.sh
-
-# Lub w kontenerze Docker
-docker-compose exec php vendor/bin/phpunit
-```
-
-### Rodzaje testów
+### Wymagania dotyczące testów
 
 #### 1. Testy funkcjonalne (Functional/)
-Testują pełny przepływ HTTP przez API:
-- ✅ **AuthControllerTest** - rejestracja, logowanie, autoryzacja JWT
-- ✅ **FlashcardControllerTest** - pełny CRUD fiszek, bezpieczeństwo, izolacja użytkowników
+Powinny testować pełny przepływ HTTP przez API:
+- **AuthControllerTest** - rejestracja, logowanie, autoryzacja JWT
+- **FlashcardControllerTest** - pełny CRUD fiszek, bezpieczeństwo, izolacja użytkowników
 
 #### 2. Testy jednostkowe (Unit/)
-Testują poszczególne klasy w izolacji:
-- ✅ **AuthServiceTest** - logika autoryzacji z mockami
+Powinny testować poszczególne klasy w izolacji:
+- **AuthServiceTest** - logika autoryzacji z mockami
 
-### Uruchamianie testów
+### Wymagania CI/CD - GitHub Actions
 
-```bash
-# Wszystkie testy
-./run-tests.sh
+Projekt powinien zawierać workflow `.github/workflows/tests.yml`, który:
+- Uruchamia testy na PHP 8.3
+- Używa SQLite in-memory (szybkie, zero setupu)
+- Generuje klucze JWT
+- Testuje API autoryzacji i CRUD fiszek
+- Generuje raport coverage i uploaduje do Codecov
+- Sprawdza jakość kodu
 
-# Tylko testy funkcjonalne
-./run-tests.sh --functional
-
-# Tylko testy jednostkowe
-./run-tests.sh --unit
-
-# Z pokryciem kodu (coverage)
-./run-tests.sh --coverage
-
-# Format testdox (czytelny output)
-./run-tests.sh --testdox
-
-# Konkretna klasa
-./run-tests.sh tests/Functional/AuthControllerTest.php
-```
-
-### Coverage raport
-
-```bash
-XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html coverage/
-# Raport w: coverage/index.html
-```
-
-### CI/CD - GitHub Actions
-
-Projekt zawiera workflow `.github/workflows/tests.yml`, który automatycznie:
-- ✅ Uruchamia testy na PHP 8.3
-- ✅ Używa SQLite in-memory (szybkie, zero setupu)
-- ✅ Generuje klucze JWT
-- ✅ Testuje API autoryzacji i CRUD fiszek
-- ✅ Generuje raport coverage i uploaduje do Codecov
-- ✅ Sprawdza jakość kodu
-
-Workflow uruchamia się przy push/PR do `main` i `develop`.
-
-**Status**: ✅ **34/34 testy przechodzą** (11 Auth + 17 Flashcard + 6 AuthService)
-
-**Setup CI/CD**: Workflow działa automatycznie po `git push`! Opcjonalna konfiguracja Codecov: **[GITHUB_CICD_SETUP.md](GITHUB_CICD_SETUP.md)**
-
-### Więcej informacji
+Workflow powinien uruchamiać się przy push/PR do `main` i `develop`.
 
 Szczegółowa dokumentacja: **[tests/README.md](tests/README.md)**
-
-### Ręczne testowanie API
-
-Użyj skryptów testowych do sprawdzenia endpointów:
-
-```bash
-# Testowanie API autoryzacji
-./test-auth.sh
-
-# Testowanie API fiszek
-./test-flashcards.sh [email] [password]
-```
-
-Lub ręcznie używając cURL (przykłady w `docs/FLASHCARDS_API.md`)
 
 ## 📝 Konfiguracja
 
@@ -232,7 +149,7 @@ Konfiguracja Symfony znajduje się w katalogu `config/`. Główne pliki:
 
 ### JWT Authentication
 
-Projekt używa LexikJWTAuthenticationBundle do autoryzacji API. Konfiguracja JWT:
+Projekt powinien używać LexikJWTAuthenticationBundle do autoryzacji API. Wymagania konfiguracji JWT:
 - **Klucze**: RSA 4096-bit, przechowywane w `config/jwt/` (ignorowane w .gitignore)
 - **TTL tokenu**: 3600 sekund (1 godzina)
 - **User ID claim**: email (używany jako identyfikator użytkownika w tokenie)
@@ -255,7 +172,7 @@ Dokumentacja: [LexikJWTAuthenticationBundle](https://github.com/lexik/LexikJWTAu
 
 ### Reguły dla AI
 
-Projekt zawiera reguły dla AI w katalogu `.cursor/rules/`:
+Projekt powinien zawierać reguły dla AI w katalogu `.cursor/rules/`:
 - `shared.mdc` - ogólne reguły projektu
 - `backend.mdc` - reguły dla PHP/Symfony
 - `twig.mdc` - reguły dla szablonów Twig
@@ -295,11 +212,12 @@ Szczegóły dostępne w pliku `.ai/prd.md`.
 
 ## 🔒 Bezpieczeństwo
 
-- Hasła są hashowane przy użyciu komponentu PasswordHasher Symfony
-- Wszystkie dane wejściowe są walidowane i sanitizowane
-- Używane są tokeny CSRF dla formularzy
-- Dane osobowe przetwarzane zgodnie z RODO
-- Użytkownicy mają prawo do wglądu i usunięcia swoich danych
+Wymagania bezpieczeństwa:
+- Hasła powinny być hashowane przy użyciu komponentu PasswordHasher Symfony
+- Wszystkie dane wejściowe powinny być walidowane i sanitizowane
+- Powinny być używane tokeny CSRF dla formularzy
+- Dane osobowe powinny być przetwarzane zgodnie z RODO
+- Użytkownicy powinni mieć prawo do wglądu i usunięcia swoich danych
 
 ## 📊 Wskaźniki sukcesu
 
@@ -309,7 +227,7 @@ Szczegóły dostępne w pliku `.ai/prd.md`.
 ## 🚧 Funkcjonalności wyłączone z MVP
 
 Następujące funkcje nie są planowane w pierwszej wersji:
-- Własna implementacja algorytmu powtórek (używamy gotowej biblioteki)
+- Własna implementacja algorytmu powtórek (powinna być używana gotowa biblioteka)
 - Elementy grywalizacji
 - Aplikacje mobilne (tylko wersja przeglądarkowa)
 - Import plików (PDF, DOCX, etc.)

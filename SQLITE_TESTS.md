@@ -9,7 +9,7 @@ SQLSTATE[XX000]: Internal error: 7 ERROR: template database "template1" has a co
 
 ## Rozwiązanie - SQLite in-memory dla testów
 
-Testy zostały zaktualizowane do używania **SQLite in-memory** zamiast PostgreSQL. To jest **lepsze rozwiązanie** ponieważ:
+Testy powinny używać **SQLite in-memory** zamiast PostgreSQL. To jest **lepsze rozwiązanie** ponieważ:
 
 ✅ **Brak konfiguracji** - nie trzeba setupować bazy danych  
 ✅ **Szybsze** - baza w pamięci RAM jest znacznie szybsza  
@@ -17,14 +17,16 @@ Testy zostały zaktualizowane do używania **SQLite in-memory** zamiast PostgreS
 ✅ **Proste** - działa od razu bez problemów z collation  
 ✅ **CI-friendly** - nie wymaga service containers w GitHub Actions  
 
-## Co zostało zmienione?
+## Co powinno być zmienione?
 
 ### 1. Dockerfile - dodano pdo_sqlite
+
 ```dockerfile
-pdo_sqlite  # Nowe rozszerzenie dla SQLite
+pdo_sqlite  # Rozszerzenie dla SQLite
 ```
 
-### 2. Nowa konfiguracja test/doctrine.yaml
+### 2. Konfiguracja test/doctrine.yaml
+
 ```yaml
 # config/packages/test/doctrine.yaml
 doctrine:
@@ -34,12 +36,14 @@ doctrine:
 ```
 
 ### 3. BaseWebTestCase - wspiera SQLite
-Automatycznie wykrywa SQLite i tworzy schemat zamiast truncate.
+
+Powinien automatycznie wykrywać SQLite i tworzyć schemat zamiast truncate.
 
 ### 4. GitHub Actions - uproszczony
-Nie potrzebuje już PostgreSQL service container!
 
-## Jak teraz uruchomić testy?
+Nie powinien potrzebować PostgreSQL service container!
+
+## Jak uruchomić testy?
 
 ### Krok 1: Przebuduj kontener Docker (ważne!)
 
@@ -84,45 +88,13 @@ docker-compose exec php php -m | grep -i sqlite
 # Powinno pokazać: pdo_sqlite, sqlite3
 ```
 
-## Co jeśli nadal nie działa?
-
-### Problem: "could not find driver"
-
-```bash
-# Sprawdź czy pdo_sqlite jest zainstalowane
-docker-compose exec php php -i | grep -i sqlite
-
-# Jeśli nie ma, przebuduj kontener FORCE
-docker-compose build --no-cache php
-docker-compose up -d
-```
-
-### Problem: Kontener się nie buduje
-
-```bash
-# Zobacz logi budowania
-docker-compose build php
-
-# Sprawdź czy nie ma błędów w Dockerfile
-```
-
-### Problem: Nadal błąd z bazą
-
-```bash
-# Wyczyść wszystko i zacznij od nowa
-docker-compose down -v
-docker-compose up -d --build
-docker-compose exec php composer install
-docker-compose exec php vendor/bin/phpunit
-```
-
 ## Czy mogę nadal używać PostgreSQL dla aplikacji?
 
 **TAK!** To ustawienie dotyczy TYLKO testów (środowisko `APP_ENV=test`).
 
 - **Rozwój** (`dev`): nadal używa PostgreSQL z docker-compose
 - **Produkcja** (`prod`): nadal używa PostgreSQL
-- **Testy** (`test`): teraz używa SQLite in-memory
+- **Testy** (`test`): powinien używać SQLite in-memory
 
 Konfiguracja jest w `config/packages/test/doctrine.yaml` - wpływa tylko na testy.
 
@@ -138,7 +110,7 @@ Konfiguracja jest w `config/packages/test/doctrine.yaml` - wpływa tylko na test
 
 ## Testy w CI/CD
 
-GitHub Actions workflow został zaktualizowany - teraz:
+GitHub Actions workflow powinien być zaktualizowany - teraz:
 
 - ✅ Nie wymaga PostgreSQL service
 - ✅ Szybsze (brak czekania na database ready)
@@ -158,7 +130,7 @@ public function testSomething(): void
 }
 ```
 
-`BaseWebTestCase` automatycznie wykrywa bazę danych i dostosowuje się.
+`BaseWebTestCase` powinien automatycznie wykrywać bazę danych i dostosowywać się.
 
 ## FAQ
 
@@ -196,10 +168,9 @@ OK (36 tests, 150 assertions)
 ## Następne kroki
 
 1. ✅ Uruchom testy lokalnie: `./run-tests.sh`
-2. ✅ Push do GitHub - CI/CD uruchomi testy automatycznie
+2. ✅ Push do GitHub - CI/CD powinien uruchomić testy automatycznie
 3. ✅ Wszystko powinno działać bez problemów!
 
 ---
 
 **Teraz możesz spokojnie rozwijać projekt bez problemów z PostgreSQL collation!** 🚀
-
