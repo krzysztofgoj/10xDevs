@@ -32,20 +32,15 @@ WORKDIR /var/www/html
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Copy Composer files first for better caching
-COPY composer.json composer.lock ./
-
-# Install dependencies without scripts (scripts will run later when app is fully set up)
-# Using install instead of update for production builds
-RUN composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader
-
-# Copy application files (excluding vendor which is already installed)
+# Copy all application files first (vendor is excluded by .dockerignore)
 COPY --chown=www-data:www-data . /var/www/html/
 
-# Ensure vendor directory exists (reinstall if it was overwritten)
-RUN if [ ! -d "vendor" ] || [ ! -f "vendor/autoload_runtime.php" ]; then \
-        composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader; \
-    fi
+# Install dependencies after copying all files
+# This ensures vendor is created in the final location
+RUN composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader
+
+# Verify vendor directory exists and has required files
+RUN ls -la vendor/autoload_runtime.php || (echo "ERROR: vendor/autoload_runtime.php missing!" && exit 1)
 
 # Run composer scripts now that all files are in place
 RUN composer dump-autoload --optimize --no-dev --classmap-authoritative || true
@@ -62,7 +57,7 @@ ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 EXPOSE 80
 
 # Run a script to fix permissions on startup (since volumes override them)
-RUN echo '#!/bin/bash\nchown -R www-data:www-data /var/www/html/var\nchmod -R 775 /var/www/html/var\nif [ -d /var/www/html/config/jwt ]; then\n  chown -R www-data:www-data /var/www/html/config/jwt\n  chmod 640 /var/www/html/config/jwt/private.pem\n  chmod 644 /var/www/html/config/jwt/public.pem\nfi\napache2-foreground' > /usr/local/bin/docker-entrypoint.sh && \
+RUN echo '#!/bin/bash\n# Verify vendor directory exists\nif [ ! -f /var/www/html/vendor/autoload_runtime.php ]; then\n    echo "ERROR: vendor/autoload_runtime.php is missing!"\n    echo "Attempting to reinstall dependencies..."\n    cd /var/www/html && composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader\n    if [ ! -f /var/www/html/vendor/autoload_runtime.php ]; then\n        echo "FATAL: Failed to install vendor dependencies"\n        exit 1\n    fi\nfi\nchown -R www-data:www-data /var/www/html/var\nchmod -R 775 /var/www/html/var\nif [ -d /var/www/html/config/jwt ]; then\n  chown -R www-data:www-data /var/www/html/config/jwt\n  chmod 640 /var/www/html/config/jwt/private.pem\n  chmod 644 /var/www/html/config/jwt/public.pem\nfi\napache2-foreground' > /usr/local/bin/docker-entrypoint.sh && \
     chmod +x /usr/local/bin/docker-entrypoint.sh
 
 CMD ["/usr/local/bin/docker-entrypoint.sh"]
