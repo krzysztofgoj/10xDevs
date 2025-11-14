@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libonig-dev \
     libsqlite3-dev \
+    unzip \
     && docker-php-ext-install \
     pdo \
     pdo_pgsql \
@@ -34,8 +35,9 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Copy Composer files first for better caching
 COPY composer.json composer.lock ./
 
-# Install dependencies (update lock file since it's out of sync)
-RUN composer update --no-interaction --prefer-dist
+# Install dependencies without scripts (scripts will run later when app is fully set up)
+# Using install instead of update for production builds
+RUN composer install --no-interaction --prefer-dist --no-scripts --no-dev --optimize-autoloader
 
 # Copy application files
 COPY . /var/www/html/
